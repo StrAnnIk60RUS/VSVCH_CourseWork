@@ -1,0 +1,14 @@
+export { default as HomePage } from './HomePage/HomePage';
+export { default as LoginPage } from './LoginPage/LoginPage';
+export { default as RegisterPage } from './RegisterPage/RegisterPage';
+export { default as CoursesPage } from './CoursesPage/CoursesPage';
+export { default as CourseDetailPage } from './CourseDetailPage/CourseDetailPage';
+export { default as LessonPage } from './LessonPage/LessonPage';
+export { default as MyLearningPage } from './MyLearningPage/MyLearningPage';
+export { default as FavoritesPage } from './FavoritesPage/FavoritesPage';
+export { default as ProgressPage } from './ProgressPage/ProgressPage';
+export { default as RemindersPage } from './RemindersPage/RemindersPage';
+export { default as ProfilePage } from './ProfilePage/ProfilePage';
+export { default as TeacherCoursesPage } from './TeacherCoursesPage/TeacherCoursesPage';
+export { default as TeacherCourseNewPage } from './TeacherCourseNewPage/TeacherCourseNewPage';
+export { default as TeacherCourseManagePage } from './TeacherCourseManagePage/TeacherCourseManagePage';
