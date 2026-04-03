@@ -76,8 +76,8 @@
 Для разработки с React:
 
 ```bash
-git clone https://github.com/StrAnnIk60RUS/LaboratoryWork.git
-cd LaboratoryWork
+git clone https://github.com/StrAnnIk60RUS/VSVCH_CourseWork.git
+cd VSVCH_CourseWork
 npm install
 npm run dev
 ```
