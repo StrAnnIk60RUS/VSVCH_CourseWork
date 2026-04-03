@@ -76,7 +76,12 @@
 Для разработки с React:
 
 ```bash
-git clone <repository-url>
-cd vsvh-languages
+git clone https://github.com/StrAnnIk60RUS/LaboratoryWork.git
+cd LaboratoryWork
 npm install
-npm start
+npm run dev
+```
+
+## Документация
+
+Подробное описание функциональных требований (API, роли, критерии приёмки): [`docs/FUNCTIONAL_REQUIREMENTS.md`](docs/FUNCTIONAL_REQUIREMENTS.md).
