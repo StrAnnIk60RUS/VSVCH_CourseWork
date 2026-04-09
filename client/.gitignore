@@ -1,6 +1,2 @@
-node_modules/
-.env
-.env.local
-dist/
-build/
-*.log
+# Shared ignore rules live in the repository root `.gitignore`.
+# Add client-only overrides below if needed.
