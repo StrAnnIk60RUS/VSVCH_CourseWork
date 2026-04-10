@@ -4,7 +4,10 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * @param {import('sequelize').QueryInterface} queryInterface
+ * Единая начальная миграция: применяет полную схему из init-schema.sql.
+ *
+ * Если в "SequelizeMeta" остались имена удалённых миграций (старые многошаговые файлы),
+ * очистите мета-таблицу или пересоздайте БД, затем выполните db:migrate снова.
  */
 function splitExecutableStatements(sql) {
   return sql
@@ -32,15 +35,21 @@ module.exports = {
       'favorites',
       'submissions',
       'lesson_completions',
+      'certificates',
       'enrollments',
       'exercises',
       'lessons',
+      'course_reviews',
+      'course_staff',
       'courses',
+      'user_roles',
       'users',
+      'roles',
     ];
     for (const t of tables) {
       await queryInterface.sequelize.query(`DROP TABLE IF EXISTS "${t}" CASCADE;`);
     }
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "CourseStaffRole";');
     await queryInterface.sequelize.query('DROP TYPE IF EXISTS "Role";');
   },
 };
