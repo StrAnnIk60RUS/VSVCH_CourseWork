@@ -4,7 +4,10 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * @param {import('sequelize').QueryInterface} queryInterface
+ * Единая начальная миграция: применяет полную схему из init-schema.sql.
+ *
+ * Если в "SequelizeMeta" остались имена удалённых миграций (старые многошаговые файлы),
+ * очистите мета-таблицу или пересоздайте БД, затем выполните db:migrate снова.
  */
 function splitExecutableStatements(sql) {
   return sql
