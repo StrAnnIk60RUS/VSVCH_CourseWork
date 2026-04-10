@@ -2,7 +2,9 @@
 
 ## 1) Предварительная модель данных (MVP)
 
-Ключевые сущности:
+Полное перечисление таблиц, ENUM и ограничений в SQL: [docs/DATABASE.md](../DATABASE.md).
+
+Ключевые сущности (соответствуют репозиторию):
 - `users`
 - `roles`
 - `user_roles`
@@ -17,7 +19,7 @@
 - `submissions`
 - `favorites`
 - `reminders`
-- `reports` (метаданные генерации/отправки)
+- `reports` — в продуктовых текстах; **отдельной таблицы в SQL пока нет** (см. [docs/DATABASE.md](../DATABASE.md))
 
 Основные связи:
 - `users` M:N `roles` через `user_roles`.
@@ -28,8 +30,12 @@
 
 ## 2) Ограничения целостности
 - Уникальность `users.email`.
-- Уникальность пары `enrollments(userId, courseId)`.
-- Уникальность пары `favorites(userId, courseId)`.
+- Уникальность пары `enrollments(user_id, course_id)`.
+- Уникальность пары `favorites(user_id, course_id)`.
+- Уникальность пары `lesson_completions(user_id, lesson_id)`.
+- Уникальность пары `course_reviews(user_id, course_id)`.
+- Уникальность `certificates.enrollment_id` и `certificates.document_number`.
+- Уникальность тройки `course_staff(course_id, user_id, staff_role)`.
 - Внешние ключи с согласованной стратегией удаления (`RESTRICT`/`CASCADE` по бизнес-правилам).
 - Индексы на полях фильтрации и сортировки (например: `courses(language, level)`, `courses(rating_average)`, `course_reviews(course_id)`, `submissions(user_id, created_at)`).
 
