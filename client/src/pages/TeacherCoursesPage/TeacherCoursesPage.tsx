@@ -1,36 +1,38 @@
+import { StandardPlaceholderPage } from '../../components/layout';
+
 export default function TeacherCoursesPage() {
   return (
-    <>
-      <header>
-        <h1>Teacher Courses</h1>
-        <p>Instructor dashboard for owned course collection.</p>
-      </header>
-      <main>
-        <nav>
-          <h2>Teacher Navigation</h2>
-          <p>Quick route links to create and manage courses.</p>
-        </nav>
-        <section>
-          <h2>Courses Overview</h2>
-          <p>Owned courses list with aggregate indicators.</p>
-        </section>
-        <section>
-          <h2>Search And Filters</h2>
-          <p>Controls for narrowing course collection.</p>
-        </section>
-        <section>
-          <h2>Actions</h2>
-          <p>Create course and open management action area.</p>
-        </section>
-        <aside>
-          <h2>Teaching Metrics</h2>
-          <p>Enrollment and activity summary placeholder.</p>
-        </aside>
-        <footer>
-          <h2>Workflow Tips</h2>
-          <p>Course lifecycle guidance placeholder.</p>
-        </footer>
-      </main>
-    </>
+    <StandardPlaceholderPage
+      title="Teacher Courses"
+      description="Instructor dashboard for owned course collection."
+      nav={{
+        title: 'Teacher Navigation',
+        body: 'Quick route links to create and manage courses.',
+      }}
+      sections={
+        [
+          {
+            title: 'Courses Overview',
+            body: 'Owned courses list with aggregate indicators.',
+          },
+          {
+            title: 'Search And Filters',
+            body: 'Controls for narrowing course collection.',
+          },
+          {
+            title: 'Actions',
+            body: 'Create course and open management action area.',
+          },
+        ] as const
+      }
+      aside={{
+        title: 'Teaching Metrics',
+        body: 'Enrollment and activity summary placeholder.',
+      }}
+      footer={{
+        title: 'Workflow Tips',
+        body: 'Course lifecycle guidance placeholder.',
+      }}
+    />
   );
 }
