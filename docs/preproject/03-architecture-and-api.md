@@ -23,7 +23,7 @@
 | (7) Адаптив 1920→320, без гориз. скролла | **Missing** | Tailwind в зависимостях есть, но страницы не стилизованы под брейкпоинты. |
 | (8) Интерактивность, hover, анимации | **Missing** | Нет кнопок/ссылок с реальными стилями состояний и анимаций. |
 | (9) localStorage + сброс | **Missing** | `localStorage` в [client/](client/) не используется; кнопки сброса нет. |
-| (10) ≥8 таблиц БД, 3НФ | **Partial** | В репозитории есть модели Sequelize ([server/db/models/index.js](server/db/models/index.js)), SQL-схема и миграция ([server/database/migrations](server/database/migrations)); маршруты Express пока не используют БД. |
+| (10) ≥8 таблиц БД, 3НФ | **Partial** | Схема задана: **14 таблиц** в [server/database/migrations/init-schema.sql](../../server/database/migrations/init-schema.sql), модели Sequelize ([server/db/models/index.js](../../server/db/models/index.js)), одна начальная миграция `20260410150000-initial-schema.cjs`; описание — [docs/DATABASE.md](../DATABASE.md). Маршруты Express пока не используют БД. |
 | (11) REST + CRUD | **Partial** | В [server/server.js](server/server.js) смонтированы REST-префиксы; каждый файл в [server/routes/](server/routes/) — только `GET /` stub (см. [server/routes/README_STUBS.md](server/routes/README_STUBS.md)). |
 | (12) Валидная семантическая вёрстка, React, Chrome | **Partial** | React + семантические теги на страницах есть; валидатор HTML и прогон в Chrome — вне кода; `recharts` в package.json, график не подключён. |
 | (13) История коммитов по гайду | **N/A в коде** | Проверяется в git-истории; в репозитории зафиксированы правила Conventional Commits (раздел 15). |
@@ -37,7 +37,7 @@
 **Факт в репозитории:**
 - **Frontend:** React + TypeScript + **Webpack** (`webpack`, `webpack-dev-server`, `ts-loader`); зависимости: `axios`, `@reduxjs/toolkit`, `react-redux`, `recharts`, Tailwind (PostCSS). Redux `Provider` и `store/` подключены в [client/src/main.tsx](client/src/main.tsx).
 - **Backend:** Express; маршруты — **временные заглушки**, без слоёв controllers/services и без БД.
-- **Database / ORM:** Sequelize — миграции и модели в `server/database/` и `server/db/`; подключение к PostgreSQL из приложения появится при реализации слоя доступа к данным.
+- **Database / ORM:** PostgreSQL; Sequelize — модели в `server/db/models/`, воспроизводимая схема через `server/database/migrations/init-schema.sql` и миграцию `20260410150000-initial-schema.cjs` ([docs/DATABASE.md](../DATABASE.md)). Подключение из обработчиков маршрутов появится при реализации слоя доступа к данным.
 
 **Repository model:** монорепозиторий с `client/` и `server/`.
 
@@ -189,10 +189,10 @@ flowchart LR
 - Очистка должна быть безопасной: удаляются только ключи префикса приложения (например, `vsvh:`).
 
 ## 13) База данных и 3НФ (минимум)
-- Не менее 8 связанных таблиц.
-- Исключены дубли данных и транзитивные зависимости.
+- Не менее 8 связанных таблиц (**в проекте — 14**, см. [docs/DATABASE.md](../DATABASE.md)).
+- Исключены дубли данных и транзитивные зависимости (с осознанными исключениями: кэш `rating_average`, JSONB в упражнениях/отправках — зафиксировано в `DATABASE.md`).
 - Для связей заданы PK/FK и ключевые ограничения уникальности.
-- Наличие миграций для воспроизводимости схемы.
+- Одна начальная миграция Sequelize + `init-schema.sql` для воспроизводимости схемы.
 
 ## 14) Технические требования (frontend)
 - Используется React.
@@ -231,7 +231,7 @@ flowchart LR
 | R7 | Адаптив | Missing | Подключить Tailwind (или MUI Grid) к layout; пройти брейкпоинты из раздела 11. |
 | R8 | Интерактивность | Missing | Общие стили `:hover/:focus`, `transition`, `cursor-pointer` на действиях. |
 | R9 | localStorage + сброс | Missing | Ключи с префиксом `vsvh:`; кнопка на профиле — см. `PAGES_AND_FEATURES.md`. |
-| R10 | ≥8 таблиц 3НФ | Missing | Добавить схему ORM + миграции; сверить с разделом «Данные» в `FUNCTIONAL_REQUIREMENTS.md`. |
+| R10 | ≥8 таблиц 3НФ | **Partial** | Схема и миграция есть ([docs/DATABASE.md](../DATABASE.md)); остаётся связать маршруты с БД и при сдаче приложить ER/описание связей. |
 | R11 | REST CRUD | Partial | Заменить заглушки в `server/routes/*.js` на полные handlers + сервисы. |
 | R12 | React, семантика, валидность | Partial | Прогнать сборку; проверить HTML валидатором; финальный smoke в Chrome. |
 | R13 | Conventional Commits | N/A | Вести историю по разделу 15. |
@@ -250,6 +250,7 @@ flowchart LR
 | [server/routes/README_STUBS.md](server/routes/README_STUBS.md) | Официальное описание состояния API. |
 | [server/routes/*.js](server/routes/) | Заглушки по одному `GET /` на модуль. |
 | [docs/FUNCTIONAL_REQUIREMENTS.md](../FUNCTIONAL_REQUIREMENTS.md) | Контракты и критерии приёмки для реализации. |
+| [docs/DATABASE.md](../DATABASE.md) | Актуальная схема PostgreSQL (таблицы, ENUM, ограничения). |
 | [docs/PAGES_AND_FEATURES.md](../PAGES_AND_FEATURES.md) | Карта экранов и связь с API. |
 
 ---
@@ -258,7 +259,7 @@ flowchart LR
 
 Рекомендуемый порядок для Cursor (от блокирующих к защите):
 
-1. **P0 — Данные и API:** схема БД (≥8 таблиц, 3НФ), миграции, реализация маршрутов по `FUNCTIONAL_REQUIREMENTS.md`, JWT и role middleware.
+1. **P0 — Данные и API:** схема БД (≥8 таблиц, 3НФ; см. [docs/DATABASE.md](../DATABASE.md)), реализация маршрутов по `FUNCTIONAL_REQUIREMENTS.md`, JWT и role middleware.
 2. **P0 — Связка клиент–сервер:** `client/src/api/`, базовый `axios` + interceptors, Redux store или иной согласованный state для auth и списков.
 3. **P1 — Функции курсовой:** каталог (фильтр/сорт/пагинация), enroll, уроки, submissions, teacher CRUD, отчёты.
 4. **P1 — UI-kit:** минимум 20 именованных компонентов в `components/`, единые стили состояний.
@@ -273,7 +274,7 @@ flowchart LR
 Проект считается готовым к защите по минимальным требованиям, если одновременно:
 
 - В разделе **1.2** нет статуса **Missing** по пунктам (1)–(11), либо каждый **Partial** закрыт письменным исключением (неприменимо к теме — только по согласованию с руководителем).
-- Есть работающая БД с миграциями и демонстрацией связей (ER-диаграмма или список таблиц в `docs/`).
+- Есть работающая БД с миграциями и демонстрацией связей (ER-диаграмма или [docs/DATABASE.md](../DATABASE.md) + проверка по `init-schema.sql`).
 - Frontend вызывает реальный backend по всем ключевым сценариям из `PAGES_AND_FEATURES.md`.
 - Выполнен ручной прогон: Chrome latest, ширины 1920 / 1440 / 768 / 375 / 320, отсутствие горизонтального скролла на типовых экранах.
 - В репозитории видна осмысленная история коммитов с Conventional Commits.
