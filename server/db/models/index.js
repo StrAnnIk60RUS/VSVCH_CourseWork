@@ -2,6 +2,26 @@ import { DataTypes, Model } from 'sequelize';
 import { randomUUID } from 'node:crypto';
 import { sequelize } from '../sequelize.js';
 
+export const ROLE_CODES = ['STUDENT', 'TEACHER', 'ADMIN'];
+
+export const COURSE_STAFF_ROLES = ['TEACHER', 'AUTHOR', 'METHODIST', 'CURATOR'];
+
+class Role extends Model {}
+Role.init(
+  {
+    code: {
+      type: DataTypes.ENUM(...ROLE_CODES),
+      primaryKey: true,
+    },
+  },
+  {
+    sequelize,
+    tableName: 'roles',
+    underscored: true,
+    timestamps: false,
+  },
+);
+
 class User extends Model {}
 User.init(
   {
@@ -13,11 +33,6 @@ User.init(
     email: { type: DataTypes.STRING, allowNull: false, unique: true },
     passwordHash: { type: DataTypes.STRING, allowNull: false, field: 'password_hash' },
     name: { type: DataTypes.STRING, allowNull: false },
-    roles: {
-      type: DataTypes.ARRAY(DataTypes.STRING),
-      allowNull: false,
-      defaultValue: [],
-    },
   },
   {
     sequelize,
@@ -29,6 +44,25 @@ User.init(
   },
 );
 
+class UserRole extends Model {}
+UserRole.init(
+  {
+    userId: { type: DataTypes.STRING, allowNull: false, primaryKey: true, field: 'user_id' },
+    roleCode: {
+      type: DataTypes.ENUM(...ROLE_CODES),
+      allowNull: false,
+      primaryKey: true,
+      field: 'role_code',
+    },
+  },
+  {
+    sequelize,
+    tableName: 'user_roles',
+    underscored: true,
+    timestamps: false,
+  },
+);
+
 class Course extends Model {}
 Course.init(
   {
@@ -37,9 +71,8 @@ Course.init(
     description: { type: DataTypes.TEXT, allowNull: false },
     language: { type: DataTypes.STRING, allowNull: false },
     level: { type: DataTypes.STRING, allowNull: false },
-    teacherId: { type: DataTypes.STRING, allowNull: false, field: 'teacher_id' },
-    enrollCount: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0, field: 'enroll_count' },
     published: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    ratingAverage: { type: DataTypes.DECIMAL(4, 3), allowNull: true, field: 'rating_average' },
   },
   {
     sequelize,
@@ -48,6 +81,48 @@ Course.init(
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',
+  },
+);
+
+class CourseStaff extends Model {}
+CourseStaff.init(
+  {
+    id: { type: DataTypes.STRING, primaryKey: true, defaultValue: () => randomUUID() },
+    courseId: { type: DataTypes.STRING, allowNull: false, field: 'course_id' },
+    userId: { type: DataTypes.STRING, allowNull: false, field: 'user_id' },
+    staffRole: {
+      type: DataTypes.ENUM(...COURSE_STAFF_ROLES),
+      allowNull: false,
+      field: 'staff_role',
+    },
+    createdAt: { type: DataTypes.DATE, allowNull: false, field: 'created_at', defaultValue: DataTypes.NOW },
+  },
+  {
+    sequelize,
+    tableName: 'course_staff',
+    underscored: true,
+    timestamps: false,
+    indexes: [{ unique: true, fields: ['course_id', 'user_id', 'staff_role'] }],
+  },
+);
+
+class CourseReview extends Model {}
+CourseReview.init(
+  {
+    id: { type: DataTypes.STRING, primaryKey: true, defaultValue: () => randomUUID() },
+    userId: { type: DataTypes.STRING, allowNull: false, field: 'user_id' },
+    courseId: { type: DataTypes.STRING, allowNull: false, field: 'course_id' },
+    rating: { type: DataTypes.SMALLINT, allowNull: false },
+    comment: { type: DataTypes.TEXT, allowNull: true },
+  },
+  {
+    sequelize,
+    tableName: 'course_reviews',
+    underscored: true,
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+    indexes: [{ unique: true, fields: ['user_id', 'course_id'] }],
   },
 );
 
@@ -100,6 +175,23 @@ Enrollment.init(
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',
+    indexes: [{ unique: true, fields: ['user_id', 'course_id'] }],
+  },
+);
+
+class Certificate extends Model {}
+Certificate.init(
+  {
+    id: { type: DataTypes.STRING, primaryKey: true, defaultValue: () => randomUUID() },
+    enrollmentId: { type: DataTypes.STRING, allowNull: false, unique: true, field: 'enrollment_id' },
+    documentNumber: { type: DataTypes.STRING, allowNull: false, unique: true, field: 'document_number' },
+    issuedAt: { type: DataTypes.DATE, allowNull: false, field: 'issued_at', defaultValue: DataTypes.NOW },
+  },
+  {
+    sequelize,
+    tableName: 'certificates',
+    underscored: true,
+    timestamps: false,
   },
 );
 
@@ -116,6 +208,7 @@ LessonCompletion.init(
     tableName: 'lesson_completions',
     underscored: true,
     timestamps: false,
+    indexes: [{ unique: true, fields: ['user_id', 'lesson_id'] }],
   },
 );
 
@@ -150,6 +243,7 @@ Favorite.init(
     tableName: 'favorites',
     underscored: true,
     timestamps: false,
+    indexes: [{ unique: true, fields: ['user_id', 'course_id'] }],
   },
 );
 
@@ -171,8 +265,33 @@ Reminder.init(
   },
 );
 
-User.hasMany(Course, { foreignKey: 'teacher_id', as: 'coursesTeaching' });
-Course.belongsTo(User, { foreignKey: 'teacher_id', as: 'teacher' });
+User.belongsToMany(Role, {
+  through: UserRole,
+  foreignKey: 'user_id',
+  otherKey: 'role_code',
+  as: 'roleEntities',
+});
+Role.belongsToMany(User, {
+  through: UserRole,
+  foreignKey: 'role_code',
+  otherKey: 'user_id',
+  as: 'usersWithRole',
+});
+
+UserRole.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+UserRole.belongsTo(Role, { foreignKey: 'role_code', targetKey: 'code', as: 'role' });
+User.hasMany(UserRole, { foreignKey: 'user_id', as: 'userRoles' });
+Role.hasMany(UserRole, { foreignKey: 'role_code', sourceKey: 'code', as: 'assignments' });
+
+Course.hasMany(CourseStaff, { foreignKey: 'course_id', as: 'staff' });
+CourseStaff.belongsTo(Course, { foreignKey: 'course_id', as: 'course' });
+User.hasMany(CourseStaff, { foreignKey: 'user_id', as: 'courseStaffAssignments' });
+CourseStaff.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+Course.hasMany(CourseReview, { foreignKey: 'course_id', as: 'reviews' });
+CourseReview.belongsTo(Course, { foreignKey: 'course_id', as: 'course' });
+User.hasMany(CourseReview, { foreignKey: 'user_id', as: 'courseReviews' });
+CourseReview.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
 Course.hasMany(Lesson, { foreignKey: 'course_id', as: 'lessons' });
 Lesson.belongsTo(Course, { foreignKey: 'course_id', as: 'course' });
@@ -184,6 +303,9 @@ User.hasMany(Enrollment, { foreignKey: 'user_id', as: 'enrollments' });
 Course.hasMany(Enrollment, { foreignKey: 'course_id', as: 'enrollments' });
 Enrollment.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 Enrollment.belongsTo(Course, { foreignKey: 'course_id', as: 'course' });
+
+Enrollment.hasOne(Certificate, { foreignKey: 'enrollment_id', as: 'certificate' });
+Certificate.belongsTo(Enrollment, { foreignKey: 'enrollment_id', as: 'enrollment' });
 
 User.hasMany(LessonCompletion, { foreignKey: 'user_id', as: 'lessonProgress' });
 Lesson.hasMany(LessonCompletion, { foreignKey: 'lesson_id', as: 'completions' });
@@ -207,11 +329,16 @@ Reminder.belongsTo(Course, { foreignKey: 'course_id', as: 'course' });
 
 export {
   sequelize,
+  Role,
   User,
+  UserRole,
   Course,
+  CourseStaff,
+  CourseReview,
   Lesson,
   Exercise,
   Enrollment,
+  Certificate,
   LessonCompletion,
   Submission,
   Favorite,
