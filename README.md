@@ -76,6 +76,8 @@ CLIENT_ORIGIN="http://localhost:5173"
 
 ### 4) Миграции и seed данных
 
+Схема PostgreSQL описана в [`docs/DATABASE.md`](docs/DATABASE.md); SQL-источник — `server/database/migrations/init-schema.sql`. Применяется **одна** начальная миграция Sequelize (`20260410150000-initial-schema.cjs`). При смене состава миграций на уже заполненной БД может понадобиться синхронизация таблицы `SequelizeMeta` (см. комментарий в файле миграции).
+
 Из корня репозитория:
 
 ```bash
@@ -120,6 +122,7 @@ npm run dev
 ## API и документация
 
 - Функциональные требования и критерии приёмки: [`docs/FUNCTIONAL_REQUIREMENTS.md`](docs/FUNCTIONAL_REQUIREMENTS.md)
+- Схема базы данных (PostgreSQL): [`docs/DATABASE.md`](docs/DATABASE.md)
 - Карта страниц и пользовательских сценариев: [`docs/PAGES_AND_FEATURES.md`](docs/PAGES_AND_FEATURES.md)
 - Архитектура и pre-project документы: [`docs/preproject/03-architecture-and-api.md`](docs/preproject/03-architecture-and-api.md)
 
@@ -136,6 +139,6 @@ npm run dev
 - Перед PR рекомендуется:
   - проверить линт: `npm run lint`
   - проверить сборку: `npm run build`
-  - при изменениях схемы БД обновить миграции/seed и документацию.
+  - при изменениях схемы БД обновить `init-schema.sql`, миграцию, модели Sequelize, seed и [`docs/DATABASE.md`](docs/DATABASE.md) (и при необходимости `FUNCTIONAL_REQUIREMENTS.md` §5).
 
 Формат коммитов: Conventional Commits (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`).
