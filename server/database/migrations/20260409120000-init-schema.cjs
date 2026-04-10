@@ -32,15 +32,21 @@ module.exports = {
       'favorites',
       'submissions',
       'lesson_completions',
+      'certificates',
       'enrollments',
       'exercises',
       'lessons',
+      'course_reviews',
+      'course_staff',
       'courses',
+      'user_roles',
       'users',
+      'roles',
     ];
     for (const t of tables) {
       await queryInterface.sequelize.query(`DROP TABLE IF EXISTS "${t}" CASCADE;`);
     }
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "CourseStaffRole";');
     await queryInterface.sequelize.query('DROP TYPE IF EXISTS "Role";');
   },
 };

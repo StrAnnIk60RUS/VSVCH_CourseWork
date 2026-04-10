@@ -3,7 +3,9 @@ import bcrypt from 'bcryptjs';
 import {
   sequelize,
   User,
+  UserRole,
   Course,
+  CourseStaff,
   Lesson,
   Exercise,
   Enrollment,
@@ -23,8 +25,13 @@ async function main() {
       email: 'teacher@vsvh.local',
       passwordHash,
       name: 'Demo Teacher',
-      roles: [ROLES.TEACHER],
     });
+  }
+  const teacherRole = await UserRole.findOne({
+    where: { userId: teacher.id, roleCode: ROLES.TEACHER },
+  });
+  if (!teacherRole) {
+    await UserRole.create({ userId: teacher.id, roleCode: ROLES.TEACHER });
   }
 
   let student = await User.findOne({ where: { email: 'student@vsvh.local' } });
@@ -33,8 +40,13 @@ async function main() {
       email: 'student@vsvh.local',
       passwordHash,
       name: 'Demo Student',
-      roles: [ROLES.STUDENT],
     });
+  }
+  const studentRole = await UserRole.findOne({
+    where: { userId: student.id, roleCode: ROLES.STUDENT },
+  });
+  if (!studentRole) {
+    await UserRole.create({ userId: student.id, roleCode: ROLES.STUDENT });
   }
 
   let course = await Course.findByPk('seed-course-intro');
@@ -45,8 +57,18 @@ async function main() {
       description: 'Seed course for local development.',
       language: 'en',
       level: 'A1',
-      teacherId: teacher.id,
       published: true,
+    });
+  }
+
+  const leadStaff = await CourseStaff.findOne({
+    where: { courseId: course.id, userId: teacher.id, staffRole: 'TEACHER' },
+  });
+  if (!leadStaff) {
+    await CourseStaff.create({
+      courseId: course.id,
+      userId: teacher.id,
+      staffRole: 'TEACHER',
     });
   }
 
