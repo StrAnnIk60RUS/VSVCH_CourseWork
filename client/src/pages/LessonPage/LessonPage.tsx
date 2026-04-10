@@ -1,36 +1,38 @@
+import { StandardPlaceholderPage } from '../../components/layout';
+
 export default function LessonPage() {
   return (
-    <>
-      <header>
-        <h1>Lesson</h1>
-        <p>Learning session layout for content and exercise flow.</p>
-      </header>
-      <main>
-        <nav>
-          <h2>Lesson Navigation</h2>
-          <p>Back to course, lesson sequence and context links.</p>
-        </nav>
-        <section>
-          <h2>Lesson Content</h2>
-          <p>Text, media and contextual lesson information.</p>
-        </section>
-        <section>
-          <h2>Exercises</h2>
-          <p>Exercise list with answer input placeholders.</p>
-        </section>
-        <section>
-          <h2>Progress Actions</h2>
-          <p>Completion and submission action area.</p>
-        </section>
-        <aside>
-          <h2>Help And Notes</h2>
-          <p>Tips, glossary and reference placeholders.</p>
-        </aside>
-        <footer>
-          <h2>Lesson Status</h2>
-          <p>Completion state and next lesson prompt area.</p>
-        </footer>
-      </main>
-    </>
+    <StandardPlaceholderPage
+      title="Lesson"
+      description="Learning session layout for content and exercise flow."
+      nav={{
+        title: 'Lesson Navigation',
+        body: 'Back to course, lesson sequence and context links.',
+      }}
+      sections={
+        [
+          {
+            title: 'Lesson Content',
+            body: 'Text, media and contextual lesson information.',
+          },
+          {
+            title: 'Exercises',
+            body: 'Exercise list with answer input placeholders.',
+          },
+          {
+            title: 'Progress Actions',
+            body: 'Completion and submission action area.',
+          },
+        ] as const
+      }
+      aside={{
+        title: 'Help And Notes',
+        body: 'Tips, glossary and reference placeholders.',
+      }}
+      footer={{
+        title: 'Lesson Status',
+        body: 'Completion state and next lesson prompt area.',
+      }}
+    />
   );
 }
