@@ -2,6 +2,7 @@
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { User, UserRole, sequelize } from '../db/models/index.js';
+import { requireAuth } from '../middleware/auth.js';
 import { getAuthUserDtoById } from '../utils/authUser.js';
 import { signAccessToken } from '../utils/jwt.js';
 
@@ -81,6 +82,10 @@ router.post('/login', async (req, res) => {
   }
   const token = signAccessToken(user.id);
   return res.status(200).json({ token, user: dto });
+});
+
+router.get('/me', requireAuth, (req, res) => {
+  return res.status(200).json(req.authUser);
 });
 
 export default router;
