@@ -2,6 +2,8 @@
 
 `auth.js` is **fully implemented** (`POST /register`, `POST /login`, `GET /me` under `/api/auth`). See [docs/FUNCTIONAL_REQUIREMENTS.md](../../../docs/FUNCTIONAL_REQUIREMENTS.md) §4.1.
 
+`courses.js` implements the public catalog and course card: `GET /api/courses` (FR-COURSE-01) and `GET /api/courses/:courseId` (FR-COURSE-02). See [docs/FUNCTIONAL_REQUIREMENTS.md](../../../docs/FUNCTIONAL_REQUIREMENTS.md) §4.3.
+
 The other route files in this folder are still **temporary stubs** created so `server/server.js` can start without `ERR_MODULE_NOT_FOUND`.
 
 Stub behavior:
