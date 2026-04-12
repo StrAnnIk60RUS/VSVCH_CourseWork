@@ -6,6 +6,7 @@ import {
   UserRole,
   Course,
   CourseStaff,
+  CourseReview,
   Lesson,
   Exercise,
   Enrollment,
@@ -104,6 +105,19 @@ async function main() {
       progress: 0,
     });
   }
+
+  const seedReview = await CourseReview.findOne({
+    where: { userId: student.id, courseId: course.id },
+  });
+  if (!seedReview) {
+    await CourseReview.create({
+      userId: student.id,
+      courseId: course.id,
+      rating: 5,
+      comment: 'Seed review for catalog minRating checks.',
+    });
+  }
+  await course.update({ ratingAverage: 5 });
 }
 
 main()
