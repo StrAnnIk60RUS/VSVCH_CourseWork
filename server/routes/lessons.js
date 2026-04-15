@@ -1,13 +1,126 @@
 ﻿import { Router } from 'express';
+import { z } from 'zod';
+import { Course, Lesson } from '../db/models/index.js';
+import { requireAuth } from '../middleware/auth.js';
+import { canManageCourse, hasRole } from '../utils/permissions.js';
 
 const router = Router();
 
-router.get('/', (_req, res) => {
-  res.json({
-    ok: true,
-    route: 'lessons',
-    message: 'Temporary stub route. Implement endpoint handlers.'
-  });
+const bodySchema = z.object({
+  title: z.string().optional(),
+  content: z.string().optional(),
+  order: z.coerce.number().int().min(1).optional(),
+});
+
+function mapLesson(lesson) {
+  const plain = lesson.get({ plain: true });
+  return {
+    id: plain.id,
+    title: plain.title,
+    content: plain.content,
+    order: plain.sortOrder,
+  };
+}
+
+router.get('/', async (req, res, next) => {
+  try {
+    const { courseId } = req.params;
+    const course = await Course.findByPk(courseId);
+    if (!course) {
+      return res.status(404).json({ error: 'Курс не найден' });
+    }
+    const lessons = await Lesson.findAll({ where: { courseId }, order: [['sortOrder', 'ASC']] });
+    return res.status(200).json({ items: lessons.map(mapLesson) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/', requireAuth, async (req, res, next) => {
+  try {
+    if (!hasRole(req, 'TEACHER')) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const { courseId } = req.params;
+    const course = await Course.findByPk(courseId);
+    if (!course) {
+      return res.status(404).json({ error: 'Курс не найден' });
+    }
+    const allowed = await canManageCourse(courseId, req.authUser.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const parsed = bodySchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Некорректные данные урока' });
+    }
+    const title = parsed.data.title?.trim() || 'Урок';
+    const content = parsed.data.content ?? '';
+    let sortOrder = parsed.data.order;
+    if (!sortOrder) {
+      const max = await Lesson.max('sortOrder', { where: { courseId } });
+      sortOrder = Number.isFinite(max) ? Number(max) + 1 : 1;
+    }
+    const lesson = await Lesson.create({
+      courseId,
+      title,
+      content,
+      sortOrder,
+    });
+    return res.status(201).json(mapLesson(lesson));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put('/:lessonId', requireAuth, async (req, res, next) => {
+  try {
+    if (!hasRole(req, 'TEACHER')) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const { courseId, lessonId } = req.params;
+    const allowed = await canManageCourse(courseId, req.authUser.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const lesson = await Lesson.findOne({ where: { id: lessonId, courseId } });
+    if (!lesson) {
+      return res.status(404).json({ error: 'Урок не найден' });
+    }
+    const parsed = bodySchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Некорректные данные урока' });
+    }
+    await lesson.update({
+      title: parsed.data.title?.trim() || lesson.title,
+      content: parsed.data.content ?? lesson.content,
+      sortOrder: parsed.data.order ?? lesson.sortOrder,
+    });
+    return res.status(200).json(mapLesson(lesson));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/:lessonId', requireAuth, async (req, res, next) => {
+  try {
+    if (!hasRole(req, 'TEACHER')) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const { courseId, lessonId } = req.params;
+    const allowed = await canManageCourse(courseId, req.authUser.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const lesson = await Lesson.findOne({ where: { id: lessonId, courseId } });
+    if (!lesson) {
+      return res.status(404).json({ error: 'Урок не найден' });
+    }
+    await lesson.destroy();
+    return res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default router;
