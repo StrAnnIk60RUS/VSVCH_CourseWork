@@ -1,7 +1,14 @@
 import axios from 'axios';
 import { STORAGE_KEYS } from '../constants/storage';
 
-const baseURL = (process.env.API_URL as string | undefined) ?? 'http://localhost:4000/api';
+type ProcessWithEnv = {
+  process?: {
+    env?: Record<string, string | undefined>;
+  };
+};
+
+const runtimeEnv = globalThis as typeof globalThis & ProcessWithEnv;
+const baseURL = runtimeEnv.process?.env?.API_URL ?? 'http://localhost:4000/api';
 
 export const http = axios.create({
   baseURL,
