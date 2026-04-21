@@ -17,6 +17,8 @@ export default function CourseDetailPage() {
   const user = useAppSelector((s) => s.app.user);
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [error, setError] = useState('');
+  const [actionMessage, setActionMessage] = useState('');
+  const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
     getCourseById(courseId)
@@ -25,6 +27,19 @@ export default function CourseDetailPage() {
   }, [courseId]);
 
   const isStudent = user?.roles.includes('STUDENT');
+
+  async function runStudentAction(action: () => Promise<void>, successMessage: string) {
+    setIsBusy(true);
+    setError('');
+    try {
+      await action();
+      setActionMessage(successMessage);
+    } catch (err) {
+      setError(getApiError(err));
+    } finally {
+      setIsBusy(false);
+    }
+  }
 
   return (
     <PageShell title={course?.title ?? 'Курс'} description={course?.description ?? 'Загрузка...'}>
@@ -38,33 +53,40 @@ export default function CourseDetailPage() {
             <div className="mt-3 flex gap-2">
               <button
                 type="button"
-                onClick={() => enrollToCourse(courseId)}
-                className="rounded border border-slate-300 px-3 py-2"
+                disabled={isBusy}
+                onClick={() => runStudentAction(() => enrollToCourse(courseId), 'Вы записаны на курс')}
+                className="rounded border border-slate-300 px-3 py-2 disabled:opacity-60"
               >
                 Записаться
               </button>
               <button
                 type="button"
-                onClick={() => unenrollFromCourse(courseId)}
-                className="rounded border border-slate-300 px-3 py-2"
+                disabled={isBusy}
+                onClick={() => runStudentAction(() => unenrollFromCourse(courseId), 'Запись на курс удалена')}
+                className="rounded border border-slate-300 px-3 py-2 disabled:opacity-60"
               >
                 Отписаться
               </button>
               <button
                 type="button"
-                onClick={() => addFavorite(courseId)}
-                className="rounded border border-slate-300 px-3 py-2"
+                disabled={isBusy}
+                onClick={() => runStudentAction(() => addFavorite(courseId), 'Курс добавлен в избранное')}
+                className="rounded border border-slate-300 px-3 py-2 disabled:opacity-60"
               >
                 В избранное
               </button>
               <button
                 type="button"
-                onClick={() => removeFavorite(courseId)}
-                className="rounded border border-slate-300 px-3 py-2"
+                disabled={isBusy}
+                onClick={() => runStudentAction(() => removeFavorite(courseId), 'Курс удален из избранного')}
+                className="rounded border border-slate-300 px-3 py-2 disabled:opacity-60"
               >
                 Убрать из избранного
               </button>
             </div>
+          )}
+          {actionMessage && !error && (
+            <p className="mt-2 text-sm text-emerald-700">{actionMessage}</p>
           )}
         </SectionCard>
         <SectionCard title="Уроки">
