@@ -19,11 +19,20 @@ export default function CourseDetailPage() {
   const [error, setError] = useState('');
   const [actionMessage, setActionMessage] = useState('');
   const [isBusy, setIsBusy] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    setIsLoading(true);
     getCourseById(courseId)
-      .then(setCourse)
-      .catch((err) => setError(getApiError(err)));
+      .then((data) => {
+        setCourse(data);
+      })
+      .catch((err) => {
+        setError(getApiError(err));
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, [courseId]);
 
   const isStudent = user?.roles.includes('STUDENT');
@@ -46,14 +55,18 @@ export default function CourseDetailPage() {
       <div className="space-y-4">
         {error && <p className="text-sm text-red-600">{error}</p>}
         <SectionCard title="О курсе">
-          <p className="mt-2 text-sm">
-            {course?.language} • {course?.level} • рейтинг {course?.ratingAverage ?? 'n/a'}
-          </p>
+          {isLoading && <p className="mt-2 text-sm text-slate-600">Загрузка данных курса...</p>}
+          {!isLoading && !error && !course && <p className="mt-2 text-sm text-slate-600">Курс не найден.</p>}
+          {!isLoading && course && (
+            <p className="mt-2 text-sm">
+              {course.language} • {course.level} • рейтинг {course.ratingAverage ?? 'n/a'}
+            </p>
+          )}
           {isStudent && (
             <div className="mt-3 flex gap-2">
               <button
                 type="button"
-                disabled={isBusy}
+                disabled={isBusy || isLoading || !course}
                 onClick={() => runStudentAction(() => enrollToCourse(courseId), 'Вы записаны на курс')}
                 className="rounded border border-slate-300 px-3 py-2 disabled:opacity-60"
               >
@@ -61,7 +74,7 @@ export default function CourseDetailPage() {
               </button>
               <button
                 type="button"
-                disabled={isBusy}
+                disabled={isBusy || isLoading || !course}
                 onClick={() => runStudentAction(() => unenrollFromCourse(courseId), 'Запись на курс удалена')}
                 className="rounded border border-slate-300 px-3 py-2 disabled:opacity-60"
               >
@@ -69,7 +82,7 @@ export default function CourseDetailPage() {
               </button>
               <button
                 type="button"
-                disabled={isBusy}
+                disabled={isBusy || isLoading || !course}
                 onClick={() => runStudentAction(() => addFavorite(courseId), 'Курс добавлен в избранное')}
                 className="rounded border border-slate-300 px-3 py-2 disabled:opacity-60"
               >
@@ -77,7 +90,7 @@ export default function CourseDetailPage() {
               </button>
               <button
                 type="button"
-                disabled={isBusy}
+                disabled={isBusy || isLoading || !course}
                 onClick={() => runStudentAction(() => removeFavorite(courseId), 'Курс удален из избранного')}
                 className="rounded border border-slate-300 px-3 py-2 disabled:opacity-60"
               >
