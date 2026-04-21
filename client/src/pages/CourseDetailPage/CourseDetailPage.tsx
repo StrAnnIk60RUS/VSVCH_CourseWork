@@ -22,17 +22,30 @@ export default function CourseDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
     setIsLoading(true);
+    setError('');
+    setActionMessage('');
+    setCourse(null);
     getCourseById(courseId)
       .then((data) => {
-        setCourse(data);
+        if (active) {
+          setCourse(data);
+        }
       })
       .catch((err) => {
-        setError(getApiError(err));
+        if (active) {
+          setError(getApiError(err));
+        }
       })
       .finally(() => {
-        setIsLoading(false);
+        if (active) {
+          setIsLoading(false);
+        }
       });
+    return () => {
+      active = false;
+    };
   }, [courseId]);
 
   const isStudent = user?.roles.includes('STUDENT');
