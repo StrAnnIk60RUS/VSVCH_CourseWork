@@ -220,3 +220,9 @@
 ## 7. Связь с документацией API
 
 Полные ID требований, тела запросов и коды ответов — в [`FUNCTIONAL_REQUIREMENTS.md`](./FUNCTIONAL_REQUIREMENTS.md), раздел 4. Настоящий файл не дублирует контракт API, а задаёт **какие экраны** обязаны вызывать **какие группы операций**.
+
+## 8. Примечание по фактической UI-реализации
+
+- В `client/src` реализованы маршруты и базовые рабочие UI-потоки для всех перечисленных страниц: auth, catalog, course detail, lesson flow, learning/favorites/progress/reminders/profile, teacher courses/new/manage.
+- Для отчетов поддержаны download и e-mail trigger сценарии в student/teacher контурах.
+- Если конкретный backend endpoint отсутствует или ограничен в текущей версии API, UI отображает серверную ошибку без обхода бизнес-правил.
