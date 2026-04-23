@@ -2,7 +2,6 @@
 import { z } from 'zod';
 import { Enrollment, Exercise, Lesson, Submission } from '../db/models/index.js';
 import { requireAuth } from '../middleware/auth.js';
-import { hasRole } from '../utils/permissions.js';
 import { recalculateProgress } from '../utils/progress.js';
 
 const router = Router();
@@ -18,9 +17,6 @@ function normalizeAnswer(v) {
 
 router.post('/', requireAuth, async (req, res, next) => {
   try {
-    if (!hasRole(req, 'STUDENT')) {
-      return res.status(403).json({ error: 'Недостаточно прав' });
-    }
     const parsed = createSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ error: 'Некорректные данные отправки' });

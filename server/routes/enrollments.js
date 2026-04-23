@@ -93,9 +93,6 @@ router.delete('/:courseId', requireAuth, async (req, res, next) => {
 
 router.post('/complete-lesson/:courseId/:lessonId', requireAuth, async (req, res, next) => {
   try {
-    if (!hasRole(req, 'STUDENT')) {
-      return res.status(403).json({ error: 'Недостаточно прав' });
-    }
     const { courseId, lessonId } = req.params;
     const enrollment = await Enrollment.findOne({ where: { userId: req.authUser.id, courseId } });
     if (!enrollment) {
