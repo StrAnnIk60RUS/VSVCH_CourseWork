@@ -91,6 +91,18 @@ export async function getTeacherCourses() {
   };
 }
 
+export async function getTeacherCourseById(courseId: string) {
+  const { data } = await http.get(`/teacher/courses/${courseId}`);
+  return data as {
+    id: string;
+    title: string;
+    description: string;
+    language: string;
+    level: string;
+    lessons: Array<{ id: string; title: string; order?: number }>;
+  };
+}
+
 export async function createCourse(payload: {
   title: string;
   description: string;
@@ -99,6 +111,27 @@ export async function createCourse(payload: {
 }) {
   const { data } = await http.post('/courses', payload);
   return data as { id: string };
+}
+
+export async function updateCourse(
+  courseId: string,
+  payload: Partial<{
+    title: string;
+    description: string;
+    language: string;
+    level: string;
+    published: boolean;
+  }>,
+) {
+  const { data } = await http.put(`/courses/${courseId}`, payload);
+  return data as {
+    id: string;
+    title: string;
+    description: string;
+    language: string;
+    level: string;
+    published: boolean;
+  };
 }
 
 export async function getTeacherStudents(courseId: string, params: Record<string, string>) {
@@ -121,7 +154,17 @@ export async function downloadTeacherStudentsCsv(courseId: string) {
 
 export async function getLessonExercises(courseId: string, lessonId: string) {
   const { data } = await http.get(`/courses/${courseId}/lessons/${lessonId}/exercises`);
-  return data as { items: Array<{ id: string; title: string; payload?: { question?: string } }> };
+  return data as {
+    items: Array<{
+      id: string;
+      title: string;
+      type: string;
+      question?: string;
+      correctAnswer?: string;
+      maxScore?: number;
+      payload?: { question?: string; correctAnswer?: string; maxScore?: number };
+    }>;
+  };
 }
 
 export async function createLesson(courseId: string, payload: { title: string; content: string }) {

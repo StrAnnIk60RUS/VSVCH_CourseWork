@@ -10,8 +10,36 @@ import {
   Exercise,
   sequelize,
 } from '../db/models/index.js';
+import { requireAuth } from '../middleware/auth.js';
+import { canManageCourse, hasRole } from '../utils/permissions.js';
 
 const router = Router();
+
+const createCourseSchema = z.object({
+  title: z.string().trim().min(1, 'title is required').max(120, 'title is too long'),
+  description: z.string().trim().min(1, 'description is required').max(2000, 'description is too long'),
+  language: z.string().trim().min(1, 'language is required').max(40, 'language is too long'),
+  level: z.string().trim().min(1, 'level is required').max(40, 'level is too long'),
+  published: z.boolean().optional(),
+});
+
+const updateCourseSchema = z
+  .object({
+    title: z.string().trim().min(1).max(120).optional(),
+    description: z.string().trim().min(1).max(2000).optional(),
+    language: z.string().trim().min(1).max(40).optional(),
+    level: z.string().trim().min(1).max(40).optional(),
+    published: z.boolean().optional(),
+  })
+  .refine(
+    (data) =>
+      data.title !== undefined ||
+      data.description !== undefined ||
+      data.language !== undefined ||
+      data.level !== undefined ||
+      data.published !== undefined,
+    { message: 'At least one field is required' },
+  );
 
 const listQuerySchema = z
   .object({
@@ -59,6 +87,16 @@ function normalizeQuery(query) {
     }
   }
   return out;
+}
+
+function validationError(message, parsed) {
+  return {
+    error: message,
+    details: parsed.error.issues.map((issue) => ({
+      path: issue.path.join('.') || 'body',
+      message: issue.message,
+    })),
+  };
 }
 
 const lessonCountSql = `(SELECT COUNT(*)::int FROM lessons WHERE lessons.course_id = "Course"."id")`;
@@ -117,11 +155,26 @@ function mapListItem(row) {
   };
 }
 
+function mapCourseEntity(course) {
+  const plain = course.get({ plain: true });
+  return {
+    id: plain.id,
+    title: plain.title,
+    description: plain.description,
+    language: plain.language,
+    level: plain.level,
+    published: plain.published,
+    ratingAverage: plain.ratingAverage != null ? Number(plain.ratingAverage) : null,
+    createdAt: plain.createdAt,
+    updatedAt: plain.updatedAt,
+  };
+}
+
 router.get('/', async (req, res, next) => {
   try {
     const parsed = listQuerySchema.safeParse(normalizeQuery(req.query));
     if (!parsed.success) {
-      return res.status(400).json({ error: 'Некорректные параметры запроса' });
+      return res.status(400).json(validationError('Некорректные параметры запроса', parsed));
     }
     const { language, level, minRating, search, sort, order, page, limit } = parsed.data;
 
@@ -263,6 +316,90 @@ router.get('/:courseId', async (req, res, next) => {
       reviewCount,
       lessons: lessonsOut,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/', requireAuth, async (req, res, next) => {
+  try {
+    if (!hasRole(req, 'TEACHER')) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const parsed = createCourseSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return res.status(400).json(validationError('Некорректные данные курса', parsed));
+    }
+
+    const created = await sequelize.transaction(async (tx) => {
+      const course = await Course.create(
+        {
+          title: parsed.data.title,
+          description: parsed.data.description,
+          language: parsed.data.language,
+          level: parsed.data.level,
+          published: parsed.data.published ?? false,
+        },
+        { transaction: tx },
+      );
+      await CourseStaff.create(
+        {
+          courseId: course.id,
+          userId: req.authUser.id,
+          staffRole: 'TEACHER',
+        },
+        { transaction: tx },
+      );
+      return course;
+    });
+
+    return res.status(201).json(mapCourseEntity(created));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put('/:courseId', requireAuth, async (req, res, next) => {
+  try {
+    if (!hasRole(req, 'TEACHER')) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const { courseId } = req.params;
+    const allowed = await canManageCourse(courseId, req.authUser.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const course = await Course.findByPk(courseId);
+    if (!course) {
+      return res.status(404).json({ error: 'Курс не найден' });
+    }
+    const parsed = updateCourseSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return res.status(400).json(validationError('Некорректные данные курса', parsed));
+    }
+    await course.update(parsed.data);
+    return res.status(200).json(mapCourseEntity(course));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/:courseId', requireAuth, async (req, res, next) => {
+  try {
+    if (!hasRole(req, 'TEACHER')) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const { courseId } = req.params;
+    const allowed = await canManageCourse(courseId, req.authUser.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const course = await Course.findByPk(courseId);
+    if (!course) {
+      return res.status(404).json({ error: 'Курс не найден' });
+    }
+    await course.destroy();
+    return res.status(204).send();
   } catch (err) {
     next(err);
   }

@@ -36,7 +36,7 @@ router.get('/courses', requireAuth, async (req, res, next) => {
     const staffRows = await CourseStaff.findAll({
       where: { userId: req.authUser.id, staffRole: 'TEACHER' },
       include: [{ model: Course, as: 'course' }],
-      order: [[{ model: Course, as: 'course' }, 'createdAt', 'DESC']],
+      order: [[{ model: Course, as: 'course' }, 'created_at', 'DESC']],
     });
     const items = await Promise.all(
       staffRows.map(async (row) => {
@@ -135,7 +135,7 @@ router.get('/courses/:courseId/students.csv', requireAuth, async (req, res, next
     const enrollments = await Enrollment.findAll({
       where: { courseId },
       include: [{ model: User, as: 'user', attributes: ['name', 'email'] }],
-      order: [['createdAt', 'DESC']],
+      order: [['created_at', 'DESC']],
     });
     const escapeCsv = (value) => `"${String(value).replace(/"/g, '""')}"`;
     const lines = ['name,email,progress,enrolledAt'];
@@ -153,6 +153,40 @@ router.get('/courses/:courseId/students.csv', requireAuth, async (req, res, next
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="course-${courseId}-students.csv"`);
     return res.status(200).send(csv);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/courses/:courseId', requireAuth, async (req, res, next) => {
+  try {
+    if (!hasRole(req, 'TEACHER')) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const { courseId } = req.params;
+    const allowed = await canManageCourse(courseId, req.authUser.id);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const course = await Course.findByPk(courseId);
+    if (!course) {
+      return res.status(404).json({ error: 'Курс не найден' });
+    }
+    const lessons = await Lesson.findAll({
+      where: { courseId },
+      order: [['sortOrder', 'ASC']],
+      attributes: ['id', 'title'],
+    });
+    const plain = course.get({ plain: true });
+    return res.status(200).json({
+      id: plain.id,
+      title: plain.title,
+      description: plain.description,
+      language: plain.language,
+      level: plain.level,
+      published: plain.published,
+      lessons: lessons.map((x) => x.get({ plain: true })),
+    });
   } catch (err) {
     next(err);
   }

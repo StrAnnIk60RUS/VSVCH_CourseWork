@@ -4,25 +4,61 @@ import { Course, Exercise, Lesson } from '../db/models/index.js';
 import { requireAuth } from '../middleware/auth.js';
 import { canManageCourse, hasRole } from '../utils/permissions.js';
 
-const router = Router();
+const router = Router({ mergeParams: true });
+
+const exerciseTypeSchema = z.enum(['text', 'single_choice', 'multiple_choice']);
 
 const createBodySchema = z.object({
-  title: z.string().optional(),
-  question: z.string().optional(),
-  type: z.string().default('text'),
+  title: z.string().trim().min(1, 'title is required'),
+  question: z.string().trim().min(1, 'question is required'),
+  type: exerciseTypeSchema.default('text'),
   correctAnswer: z.union([z.string(), z.number(), z.boolean()]).optional(),
   maxScore: z.coerce.number().int().min(0).optional(),
   payload: z.record(z.any()).optional(),
 });
 
+const updateBodySchema = z
+  .object({
+    title: z.string().trim().min(1).optional(),
+    question: z.string().trim().min(1).optional(),
+    type: exerciseTypeSchema.optional(),
+    correctAnswer: z.union([z.string(), z.number(), z.boolean()]).optional(),
+    maxScore: z.coerce.number().int().min(0).optional(),
+    payload: z.record(z.any()).optional(),
+  })
+  .refine(
+    (data) =>
+      data.title !== undefined ||
+      data.question !== undefined ||
+      data.type !== undefined ||
+      data.correctAnswer !== undefined ||
+      data.maxScore !== undefined ||
+      data.payload !== undefined,
+    { message: 'At least one field is required' },
+  );
+
+function validationError(message, parsed) {
+  return {
+    error: message,
+    details: parsed.error.issues.map((issue) => ({
+      path: issue.path.join('.') || 'body',
+      message: issue.message,
+    })),
+  };
+}
+
 function mapExercise(exercise) {
   const plain = exercise.get({ plain: true });
+  const payload = plain.payload ?? {};
   return {
     id: plain.id,
     lessonId: plain.lessonId,
     title: plain.title,
     type: plain.type,
-    payload: plain.payload ?? {},
+    question: payload.question ?? '',
+    correctAnswer: payload.correctAnswer ?? '',
+    maxScore: payload.maxScore ?? 10,
+    payload,
   };
 }
 
@@ -65,15 +101,15 @@ router.post('/', requireAuth, async (req, res, next) => {
     }
     const parsed = createBodySchema.safeParse(req.body ?? {});
     if (!parsed.success) {
-      return res.status(400).json({ error: 'Некорректные данные упражнения' });
+      return res.status(400).json(validationError('Некорректные данные упражнения', parsed));
     }
     const payload = parsed.data.payload ?? {};
-    const question = parsed.data.question ?? '';
+    const question = parsed.data.question.trim();
     const correctAnswer = parsed.data.correctAnswer !== undefined ? String(parsed.data.correctAnswer) : '';
     const maxScore = parsed.data.maxScore ?? 10;
     const exercise = await Exercise.create({
       lessonId,
-      title: parsed.data.title?.trim() || 'Exercise',
+      title: parsed.data.title.trim(),
       type: parsed.data.type,
       payload: { ...payload, question, correctAnswer, maxScore },
     });
@@ -97,9 +133,9 @@ router.put('/:exerciseId', requireAuth, async (req, res, next) => {
     if (!lesson) {
       return res.status(404).json({ error: 'Урок не найден' });
     }
-    const parsed = createBodySchema.safeParse(req.body ?? {});
+    const parsed = updateBodySchema.safeParse(req.body ?? {});
     if (!parsed.success) {
-      return res.status(400).json({ error: 'Некорректные данные упражнения' });
+      return res.status(400).json(validationError('Некорректные данные упражнения', parsed));
     }
     const exercise = await Exercise.findOne({ where: { id: exerciseId, lessonId } });
     if (!exercise) {
@@ -117,7 +153,7 @@ router.put('/:exerciseId', requireAuth, async (req, res, next) => {
       maxScore: parsed.data.maxScore ?? current.maxScore ?? 10,
     };
     await exercise.update({
-      title: parsed.data.title?.trim() || exercise.title,
+      title: parsed.data.title?.trim() ?? exercise.title,
       type: parsed.data.type ?? exercise.type,
       payload: nextPayload,
     });
