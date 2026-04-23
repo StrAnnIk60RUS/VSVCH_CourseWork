@@ -3,12 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { getApiError, registerUser } from '../../api';
 import { PageShell, SectionCard } from '../../components/layout';
 import { STORAGE_KEYS } from '../../constants/storage';
+import { useI18n } from '../../hooks/useI18n';
 import { useAppDispatch } from '../../store/hooks';
 import { setSession } from '../../store/slices/appSlice';
 
 type RegisterRole = 'student' | 'teacher';
 
 export default function RegisterPage() {
+  const t = useI18n();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [name, setName] = useState('');
@@ -35,17 +37,17 @@ export default function RegisterPage() {
   };
 
   return (
-    <PageShell title="Регистрация" description="Создайте аккаунт студента или преподавателя.">
+    <PageShell title={t.register.pageTitle} description={t.register.pageDescription}>
       <div className="mx-auto max-w-xl">
-        <SectionCard title="Новый аккаунт">
+        <SectionCard title={t.register.cardTitle}>
           <form onSubmit={onSubmit} className="mt-3 space-y-3">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               type="text"
               required
-              placeholder="Имя"
-              className="w-full rounded border border-slate-300 px-3 py-2"
+              placeholder={t.register.namePlaceholder}
+              className="ui-input w-full rounded px-3 py-2"
             />
             <input
               value={email}
@@ -53,23 +55,23 @@ export default function RegisterPage() {
               type="email"
               required
               placeholder="Email"
-              className="w-full rounded border border-slate-300 px-3 py-2"
+              className="ui-input w-full rounded px-3 py-2"
             />
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               type="password"
               required
-              placeholder="Пароль"
-              className="w-full rounded border border-slate-300 px-3 py-2"
+              placeholder={t.register.passwordPlaceholder}
+              className="ui-input w-full rounded px-3 py-2"
             />
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as RegisterRole)}
-              className="w-full rounded border border-slate-300 px-3 py-2"
+              className="ui-input w-full rounded px-3 py-2"
             >
-              <option value="student">Student</option>
-              <option value="teacher">Teacher</option>
+              <option value="student">{t.register.roleStudent}</option>
+              <option value="teacher">{t.register.roleTeacher}</option>
             </select>
             {error && <p className="text-sm text-red-600">{error}</p>}
             <button
@@ -77,11 +79,14 @@ export default function RegisterPage() {
               disabled={isSubmitting}
               className="rounded bg-brand-600 px-4 py-2 text-white disabled:opacity-60"
             >
-              {isSubmitting ? 'Создание...' : 'Создать аккаунт'}
+              {isSubmitting ? t.register.submitPending : t.register.submitIdle}
             </button>
           </form>
-          <p className="mt-3 text-sm text-slate-600">
-            Уже есть аккаунт? <Link to="/login">Войти</Link>
+          <p className="mt-3 text-sm text-ui-muted">
+            {t.register.haveAccount}{' '}
+            <Link to="/login" className="text-ui-link hover:text-ui-link-hover">
+              {t.register.loginLink}
+            </Link>
           </p>
         </SectionCard>
       </div>

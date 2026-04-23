@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getApiError, getCourses } from '../../api';
 import { PageShell, SectionCard } from '../../components/layout';
+import { useI18n } from '../../hooks/useI18n';
 import { STORAGE_KEYS } from '../../constants/storage';
 import type { CourseListItem } from '../../types/domain';
 
@@ -20,6 +21,7 @@ const defaultFilters: CatalogFilters = {
 };
 
 export default function CoursesPage() {
+  const t = useI18n();
   const [filters, setFilters] = useState<CatalogFilters>(() => {
     const raw = localStorage.getItem(STORAGE_KEYS.catalogFilters);
     return raw ? ({ ...defaultFilters, ...JSON.parse(raw) } as CatalogFilters) : defaultFilters;
@@ -71,45 +73,45 @@ export default function CoursesPage() {
   }, [filters, page, sortParts.order, sortParts.sort]);
 
   return (
-    <PageShell title="Каталог курсов" description="Публичный каталог с фильтрами, сортировкой и пагинацией.">
+    <PageShell title={t.courses.pageTitle} description={t.courses.pageDescription}>
       <div className="space-y-4">
-        <SectionCard title="Фильтры">
+        <SectionCard title={t.courses.filters}>
           <div className="mt-3 grid gap-2 md:grid-cols-4">
             <input
               value={filters.search}
               onChange={(e) => setFilters((x) => ({ ...x, search: e.target.value }))}
-              placeholder="Поиск"
-              className="rounded border border-slate-300 px-3 py-2"
+              placeholder={t.courses.searchPlaceholder}
+              className="ui-input rounded px-3 py-2"
             />
             <input
               value={filters.language}
               onChange={(e) => setFilters((x) => ({ ...x, language: e.target.value }))}
-              placeholder="Язык"
-              className="rounded border border-slate-300 px-3 py-2"
+              placeholder={t.courses.languagePlaceholder}
+              className="ui-input rounded px-3 py-2"
             />
             <input
               value={filters.level}
               onChange={(e) => setFilters((x) => ({ ...x, level: e.target.value }))}
-              placeholder="Уровень"
-              className="rounded border border-slate-300 px-3 py-2"
+              placeholder={t.courses.levelPlaceholder}
+              className="ui-input rounded px-3 py-2"
             />
             <input
               value={filters.minRating}
               onChange={(e) => setFilters((x) => ({ ...x, minRating: e.target.value }))}
-              placeholder="Мин. рейтинг"
-              className="rounded border border-slate-300 px-3 py-2"
+              placeholder={t.courses.minRatingPlaceholder}
+              className="ui-input rounded px-3 py-2"
             />
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
-              className="rounded border border-slate-300 px-3 py-2"
+              className="ui-input rounded px-3 py-2"
             >
-              <option value="createdAt:desc">Новые</option>
-              <option value="rating:desc">Рейтинг</option>
-              <option value="popularity:desc">Популярность</option>
-              <option value="createdAt:asc">Старые</option>
+              <option value="createdAt:desc">{t.courses.sortNew}</option>
+              <option value="rating:desc">{t.courses.sortRating}</option>
+              <option value="popularity:desc">{t.courses.sortPopularity}</option>
+              <option value="createdAt:asc">{t.courses.sortOld}</option>
             </select>
             <button
               type="button"
@@ -118,24 +120,24 @@ export default function CoursesPage() {
                 setSort('createdAt:desc');
                 setPage(1);
               }}
-              className="rounded border border-slate-300 px-3 py-2"
+              className="ui-button-secondary rounded px-3 py-2"
             >
-              Сброс
+              {t.courses.reset}
             </button>
           </div>
         </SectionCard>
-        <SectionCard title={`Курсы (${total})`}>
+        <SectionCard title={`${t.courses.coursesLabel} (${total})`}>
           {error && <p className="text-red-600">{error}</p>}
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             {items.map((item) => (
-              <article key={item.id} className="rounded border border-slate-200 p-4">
-                <h3 className="font-semibold text-slate-900">{item.title}</h3>
-                <p className="text-sm text-slate-600">{item.description}</p>
-                <p className="mt-2 text-xs text-slate-500">
-                  {item.language} • {item.level} • уроков: {item.lessonCount}
+              <article key={item.id} className="rounded border border-ui-border bg-ui-surface p-4">
+                <h3 className="font-semibold text-ui-text">{item.title}</h3>
+                <p className="text-sm text-ui-muted">{item.description}</p>
+                <p className="mt-2 text-xs text-ui-muted">
+                  {item.language} • {item.level} • {t.courses.lessonsLabel}: {item.lessonCount}
                 </p>
-                <Link to={`/courses/${item.id}`} className="mt-3 inline-block text-sm text-brand-700">
-                  Открыть курс
+                <Link to={`/courses/${item.id}`} className="mt-3 inline-block text-sm text-ui-link hover:text-ui-link-hover">
+                  {t.courses.openCourse}
                 </Link>
               </article>
             ))}
@@ -145,18 +147,20 @@ export default function CoursesPage() {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((x) => Math.max(1, x - 1))}
-              className="rounded border border-slate-300 px-3 py-2 disabled:opacity-50"
+              className="ui-button-secondary rounded px-3 py-2 disabled:opacity-50"
             >
-              Назад
+              {t.courses.back}
             </button>
-            <span className="text-sm text-slate-600">Страница {page}</span>
+            <span className="text-sm text-ui-muted">
+              {t.courses.page} {page}
+            </span>
             <button
               type="button"
               disabled={items.length < 8}
               onClick={() => setPage((x) => x + 1)}
-              className="rounded border border-slate-300 px-3 py-2 disabled:opacity-50"
+              className="ui-button-secondary rounded px-3 py-2 disabled:opacity-50"
             >
-              Далее
+              {t.courses.next}
             </button>
           </div>
         </SectionCard>

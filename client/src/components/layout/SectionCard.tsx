@@ -7,9 +7,9 @@ type SectionCardProps = {
 
 export function SectionCard({ title, children }: SectionCardProps) {
   return (
-    <section className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
-      <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-      <div className="mt-2 text-sm leading-relaxed text-slate-600">{children}</div>
+    <section className="rounded-xl border border-ui-border bg-ui-surface p-5 shadow-sm sm:p-6">
+      <h2 className="text-lg font-semibold text-ui-text">{title}</h2>
+      <div className="mt-2 text-sm leading-relaxed text-ui-muted">{children}</div>
     </section>
   );
 }
