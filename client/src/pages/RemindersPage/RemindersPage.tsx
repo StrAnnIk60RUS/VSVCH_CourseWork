@@ -14,6 +14,14 @@ export default function RemindersPage() {
   const [remindAt, setRemindAt] = useState('');
   const [status, setStatus] = useState('');
 
+  const toIsoDateTime = (value: string) => {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+    return parsed.toISOString();
+  };
+
   useEffect(() => {
     getReminders()
       .then((res) => setItems(res.items))
@@ -40,9 +48,25 @@ export default function RemindersPage() {
             <button
               type="button"
               onClick={async () => {
-                const created = await createReminder(title, remindAt);
-                setItems((prev) => [...prev, created]);
-                setStatus('Напоминание создано');
+                const trimmedTitle = title.trim();
+                if (!trimmedTitle) {
+                  setStatus('Введите название напоминания');
+                  return;
+                }
+                const remindAtIso = toIsoDateTime(remindAt);
+                if (!remindAtIso) {
+                  setStatus('Укажите корректную дату и время');
+                  return;
+                }
+                try {
+                  const created = await createReminder(trimmedTitle, remindAtIso);
+                  setItems((prev) => [...prev, created]);
+                  setStatus('Напоминание создано');
+                  setTitle('');
+                  setRemindAt('');
+                } catch (err) {
+                  setStatus(getApiError(err));
+                }
               }}
               className="rounded border border-slate-300 px-3 py-2"
             >
@@ -63,9 +87,13 @@ export default function RemindersPage() {
                     <button
                       type="button"
                       onClick={async () => {
-                        const updated = await updateReminder(item.id, item.title, item.remindAt);
-                        setItems((prev) => prev.map((x) => (x.id === item.id ? updated : x)));
-                        setStatus('Напоминание обновлено');
+                        try {
+                          const updated = await updateReminder(item.id, item.title, item.remindAt);
+                          setItems((prev) => prev.map((x) => (x.id === item.id ? updated : x)));
+                          setStatus('Напоминание обновлено');
+                        } catch (err) {
+                          setStatus(getApiError(err));
+                        }
                       }}
                       className="rounded border border-slate-300 px-2 py-1"
                     >
@@ -74,9 +102,13 @@ export default function RemindersPage() {
                     <button
                       type="button"
                       onClick={async () => {
-                        await deleteReminder(item.id);
-                        setItems((prev) => prev.filter((x) => x.id !== item.id));
-                        setStatus('Напоминание удалено');
+                        try {
+                          await deleteReminder(item.id);
+                          setItems((prev) => prev.filter((x) => x.id !== item.id));
+                          setStatus('Напоминание удалено');
+                        } catch (err) {
+                          setStatus(getApiError(err));
+                        }
                       }}
                       className="rounded border border-slate-300 px-2 py-1"
                     >

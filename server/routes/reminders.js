@@ -6,14 +6,14 @@ import { requireAuth } from '../middleware/auth.js';
 const router = Router();
 
 const createSchema = z.object({
-  title: z.string(),
-  remindAt: z.string(),
+  title: z.string().trim().min(1, 'title is required'),
+  remindAt: z.string().datetime({ offset: true }),
   courseId: z.string().optional().nullable(),
 });
 
 const updateSchema = z.object({
-  title: z.string().optional(),
-  remindAt: z.string().optional(),
+  title: z.string().trim().min(1).optional(),
+  remindAt: z.string().datetime({ offset: true }).optional(),
   courseId: z.string().optional().nullable(),
 });
 
@@ -32,7 +32,7 @@ router.get('/', requireAuth, async (req, res, next) => {
 router.post('/', requireAuth, async (req, res, next) => {
   try {
     const parsed = createSchema.safeParse(req.body);
-    if (!parsed.success || !parsed.data.title.trim()) {
+    if (!parsed.success) {
       return res.status(400).json({ error: 'Некорректные данные напоминания' });
     }
     const remindAt = new Date(parsed.data.remindAt);
