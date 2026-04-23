@@ -11,7 +11,87 @@
 }
 
 @layer base {
+  :root {
+    --ui-bg: #f8fafc;
+    --ui-surface: #ffffff;
+    --ui-subtle: #f1f5f9;
+    --ui-border: #e2e8f0;
+    --ui-text: #0f172a;
+    --ui-muted: #475569;
+    --ui-link: #0f766e;
+    --ui-link-hover: #115e59;
+    --ui-input-bg: #ffffff;
+  }
+
+  :root[data-theme='dark'] {
+    --ui-bg: #020617;
+    --ui-surface: #111b2e;
+    --ui-subtle: #1f2a40;
+    --ui-border: #43536e;
+    --ui-text: #f1f5f9;
+    --ui-muted: #cbd5e1;
+    --ui-link: #5eead4;
+    --ui-link-hover: #99f6e4;
+    --ui-input-bg: #0b1324;
+  }
+
   body {
-    @apply min-h-dvh bg-slate-50 font-sans text-slate-900 antialiased;
+    @apply min-h-dvh font-sans antialiased;
+    background: var(--ui-bg);
+    color: var(--ui-text);
+  }
+}
+
+@layer utilities {
+  .bg-ui-bg {
+    background: var(--ui-bg);
+  }
+
+  .bg-ui-surface {
+    background: var(--ui-surface);
+  }
+
+  .bg-ui-subtle {
+    background: var(--ui-subtle);
+  }
+
+  .border-ui-border {
+    border-color: var(--ui-border);
+  }
+
+  .text-ui-text {
+    color: var(--ui-text);
+  }
+
+  .text-ui-muted {
+    color: var(--ui-muted);
+  }
+
+  .text-ui-link {
+    color: var(--ui-link);
+  }
+
+  .hover\:text-ui-link-hover:hover {
+    color: var(--ui-link-hover);
+  }
+
+  .ui-input {
+    border: 1px solid var(--ui-border);
+    background: var(--ui-input-bg);
+    color: var(--ui-text);
+  }
+
+  .ui-input::placeholder {
+    color: var(--ui-muted);
+  }
+
+  .ui-button-secondary {
+    border: 1px solid var(--ui-border);
+    color: var(--ui-text);
+    background: var(--ui-surface);
+  }
+
+  .ui-button-secondary:hover {
+    background: var(--ui-subtle);
   }
 }

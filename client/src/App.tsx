@@ -21,13 +21,28 @@ import {
   TeacherCoursesPage,
 } from './pages';
 import { useAppDispatch } from './store/hooks';
-import { clearSession, setUser } from './store/slices/appSlice';
+import { clearSession, setTheme, setUiLanguage, setUser } from './store/slices/appSlice';
+import { readAccessToken } from './utils/session';
 
 export default function App() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    const token = localStorage.getItem(STORAGE_KEYS.token);
+    const savedTheme = localStorage.getItem(STORAGE_KEYS.theme);
+    const theme = savedTheme === 'dark' ? 'dark' : 'light';
+    dispatch(setTheme(theme));
+    document.documentElement.dataset.theme = theme;
+  }, [dispatch]);
+
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem(STORAGE_KEYS.uiLanguage);
+    const language = savedLanguage === 'en' ? 'en' : 'ru';
+    dispatch(setUiLanguage(language));
+    document.documentElement.lang = language;
+  }, [dispatch]);
+
+  useEffect(() => {
+    const token = readAccessToken();
     if (!token) {
       dispatch(clearSession());
       return;

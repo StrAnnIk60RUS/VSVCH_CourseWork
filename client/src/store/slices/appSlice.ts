@@ -6,6 +6,8 @@ interface AppState {
   user: AuthUser | null;
   token: string | null;
   authChecked: boolean;
+  theme: 'light' | 'dark';
+  uiLanguage: 'ru' | 'en';
 }
 
 const initialState: AppState = {
@@ -13,6 +15,8 @@ const initialState: AppState = {
   user: null,
   token: null,
   authChecked: false,
+  theme: 'light',
+  uiLanguage: 'ru',
 };
 
 export const appSlice = createSlice({
@@ -33,7 +37,13 @@ export const appSlice = createSlice({
       state.token = null;
       state.authChecked = true;
     },
+    setTheme(state, action: PayloadAction<'light' | 'dark'>) {
+      state.theme = action.payload;
+    },
+    setUiLanguage(state, action: PayloadAction<'ru' | 'en'>) {
+      state.uiLanguage = action.payload;
+    },
   },
 });
 
-export const { setSession, setUser, clearSession } = appSlice.actions;
+export const { setSession, setUser, clearSession, setTheme, setUiLanguage } = appSlice.actions;
