@@ -9,7 +9,7 @@ export async function getStudentProgressReport(userId) {
   const enrollments = await Enrollment.findAll({
     where: { userId },
     include: [{ model: Course, as: 'course' }],
-    order: [['createdAt', 'DESC']],
+    order: [['created_at', 'DESC']],
   });
   const scores = await Submission.findAll({
     where: { userId },

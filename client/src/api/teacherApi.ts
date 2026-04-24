@@ -15,7 +15,7 @@ export async function getTeacherCourseById(courseId: string) {
     description: string;
     language: string;
     level: string;
-    lessons: Array<{ id: string; title: string; order?: number }>;
+    lessons: Array<{ id: string; title: string; content?: string; order?: number }>;
   };
 }
 
@@ -77,6 +77,15 @@ export async function deleteLesson(courseId: string, lessonId: string) {
   await http.delete(`/courses/${courseId}/lessons/${lessonId}`);
 }
 
+export async function updateLesson(
+  courseId: string,
+  lessonId: string,
+  payload: { title?: string; content?: string; order?: number },
+) {
+  const { data } = await http.put(`/courses/${courseId}/lessons/${lessonId}`, payload);
+  return data as { id: string; title: string; content?: string; order?: number };
+}
+
 export async function getLessonExercises(courseId: string, lessonId: string) {
   const { data } = await http.get(`/courses/${courseId}/lessons/${lessonId}/exercises`);
   return data as {
@@ -85,7 +94,7 @@ export async function getLessonExercises(courseId: string, lessonId: string) {
       title: string;
       type: string;
       question?: string;
-      correctAnswer?: string;
+      correctAnswer?: string | number | boolean;
       maxScore?: number;
       payload?: { question?: string; correctAnswer?: string; maxScore?: number };
     }>;
@@ -103,4 +112,14 @@ export async function createExercise(
 
 export async function deleteExercise(courseId: string, lessonId: string, exerciseId: string) {
   await http.delete(`/courses/${courseId}/lessons/${lessonId}/exercises/${exerciseId}`);
+}
+
+export async function updateExercise(
+  courseId: string,
+  lessonId: string,
+  exerciseId: string,
+  payload: Partial<{ title: string; question: string; correctAnswer: string; maxScore: number }>,
+) {
+  const { data } = await http.put(`/courses/${courseId}/lessons/${lessonId}/exercises/${exerciseId}`, payload);
+  return data as { id: string; title: string; question?: string; correctAnswer?: string; maxScore?: number };
 }

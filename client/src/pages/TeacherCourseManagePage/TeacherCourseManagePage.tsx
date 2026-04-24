@@ -19,17 +19,23 @@ export default function TeacherCourseManagePage() {
             lessonContent={vm.lessonContent}
             lessons={vm.course?.lessons ?? []}
             exerciseMap={vm.exerciseMap}
+            lessonEdits={vm.lessonEdits}
+            exerciseEdits={vm.exerciseEdits}
             exerciseForms={vm.exerciseForms}
             busyAction={vm.busyAction}
             setCourseForm={vm.setCourseForm}
             setLessonTitle={vm.setLessonTitle}
             setLessonContent={vm.setLessonContent}
+            setLessonEdits={vm.setLessonEdits}
+            setExerciseEdits={vm.setExerciseEdits}
             setExerciseForms={vm.setExerciseForms}
             onSaveCourse={vm.actions.updateCourse}
             onCreateLesson={vm.actions.createLesson}
             onDeleteLesson={vm.actions.deleteLesson}
+            onSaveLesson={vm.actions.saveLesson}
             onCreateExercise={vm.actions.createExercise}
             onDeleteExercise={vm.actions.deleteExercise}
+            onSaveExercise={vm.actions.saveExercise}
           />
         </SectionCard>
 

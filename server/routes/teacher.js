@@ -162,7 +162,7 @@ router.get('/courses/:courseId', requireAuth, async (req, res, next) => {
     const lessons = await Lesson.findAll({
       where: { courseId },
       order: [['sortOrder', 'ASC']],
-      attributes: ['id', 'title'],
+      attributes: ['id', 'title', 'content'],
     });
     const plain = course.get({ plain: true });
     return res.status(200).json({
@@ -172,7 +172,10 @@ router.get('/courses/:courseId', requireAuth, async (req, res, next) => {
       language: plain.language,
       level: plain.level,
       published: plain.published,
-      lessons: lessons.map((x) => x.get({ plain: true })),
+      lessons: lessons.map((x) => {
+        const row = x.get({ plain: true });
+        return { id: row.id, title: row.title, content: row.content ?? '' };
+      }),
     });
   } catch (err) {
     next(err);
