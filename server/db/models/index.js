@@ -132,7 +132,13 @@ Lesson.init(
     id: { type: DataTypes.STRING, primaryKey: true, defaultValue: () => randomUUID() },
     courseId: { type: DataTypes.STRING, allowNull: false, field: 'course_id' },
     title: { type: DataTypes.STRING, allowNull: false },
-    sortOrder: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0, field: 'sort_order' },
+    sortOrder: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      field: 'sort_order',
+      validate: { min: 0 },
+    },
     content: { type: DataTypes.TEXT, allowNull: false },
   },
   {
@@ -166,7 +172,7 @@ Enrollment.init(
     id: { type: DataTypes.STRING, primaryKey: true, defaultValue: () => randomUUID() },
     userId: { type: DataTypes.STRING, allowNull: false, field: 'user_id' },
     courseId: { type: DataTypes.STRING, allowNull: false, field: 'course_id' },
-    progress: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    progress: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0, validate: { min: 0, max: 100 } },
   },
   {
     sequelize,
@@ -218,7 +224,7 @@ Submission.init(
     id: { type: DataTypes.STRING, primaryKey: true, defaultValue: () => randomUUID() },
     userId: { type: DataTypes.STRING, allowNull: false, field: 'user_id' },
     exerciseId: { type: DataTypes.STRING, allowNull: false, field: 'exercise_id' },
-    score: { type: DataTypes.INTEGER, allowNull: true },
+    score: { type: DataTypes.INTEGER, allowNull: true, validate: { min: 0 } },
     payload: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} },
     createdAt: { type: DataTypes.DATE, allowNull: false, field: 'created_at', defaultValue: DataTypes.NOW },
   },

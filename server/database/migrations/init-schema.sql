@@ -80,7 +80,8 @@ CREATE TABLE "lessons" (
     "sort_order" INTEGER NOT NULL DEFAULT 0,
     "content" TEXT NOT NULL,
 
-    CONSTRAINT "lessons_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "lessons_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "lessons_sort_order_non_negative_check" CHECK ("sort_order" >= 0)
 );
 
 -- Variable structure by exercise type; kept as JSONB for flexibility (not every attribute is atomic across types).
@@ -102,7 +103,8 @@ CREATE TABLE "enrollments" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "enrollments_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "enrollments_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "enrollments_progress_range_check" CHECK ("progress" >= 0 AND "progress" <= 100)
 );
 
 -- Сертификат привязан к факту записи на курс (enrollment).
@@ -134,7 +136,8 @@ CREATE TABLE "submissions" (
     "payload" JSONB NOT NULL DEFAULT '{}',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "submissions_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "submissions_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "submissions_score_non_negative_check" CHECK ("score" IS NULL OR "score" >= 0)
 );
 
 CREATE TABLE "favorites" (
@@ -168,8 +171,13 @@ CREATE UNIQUE INDEX "lesson_completions_user_id_lesson_id_key" ON "lesson_comple
 CREATE UNIQUE INDEX "favorites_user_id_course_id_key" ON "favorites"("user_id", "course_id");
 
 CREATE INDEX "course_staff_course_id_idx" ON "course_staff"("course_id");
+CREATE INDEX "course_staff_user_id_staff_role_idx" ON "course_staff"("user_id", "staff_role");
 
 CREATE INDEX "course_reviews_course_id_idx" ON "course_reviews"("course_id");
+CREATE INDEX "enrollments_course_id_idx" ON "enrollments"("course_id");
+CREATE INDEX "lessons_course_id_idx" ON "lessons"("course_id");
+CREATE INDEX "exercises_lesson_id_idx" ON "exercises"("lesson_id");
+CREATE INDEX "submissions_user_id_created_at_idx" ON "submissions"("user_id", "created_at" DESC);
 
 CREATE INDEX "courses_rating_average_idx" ON "courses"("rating_average");
 
