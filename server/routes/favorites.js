@@ -1,7 +1,8 @@
 ﻿import { Router } from 'express';
 import { z } from 'zod';
-import { Course, CourseStaff, Favorite, User } from '../db/models/index.js';
+import { Course, Favorite } from '../db/models/index.js';
 import { requireAuth } from '../middleware/auth.js';
+import { getLeadTeachersByCourseIds } from '../services/courseStaffService.js';
 
 const router = Router();
 
@@ -16,24 +17,15 @@ router.get('/', requireAuth, async (req, res, next) => {
       include: [{ model: Course, as: 'course' }],
       order: [['createdAt', 'DESC']],
     });
-    const items = await Promise.all(
-      rows.map(async (row) => {
-        const plain = row.get({ plain: true });
-        const lead = await CourseStaff.findOne({
-          where: { courseId: row.courseId, staffRole: 'TEACHER' },
-          include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email'] }],
-          order: [['createdAt', 'ASC']],
-        });
-        const leadTeacher = lead?.user?.get({ plain: true }) ?? null;
-        return {
-          id: plain.id,
-          courseId: plain.courseId,
-          createdAt: plain.createdAt,
-          course: plain.course,
-          leadTeacher,
-        };
-      }),
-    );
+    const plainRows = rows.map((row) => row.get({ plain: true }));
+    const leadByCourseId = await getLeadTeachersByCourseIds(plainRows.map((row) => row.courseId));
+    const items = plainRows.map((plain) => ({
+      id: plain.id,
+      courseId: plain.courseId,
+      createdAt: plain.createdAt,
+      course: plain.course,
+      leadTeacher: leadByCourseId[plain.courseId]?.get({ plain: true }) ?? null,
+    }));
     return res.status(200).json({ items });
   } catch (err) {
     next(err);

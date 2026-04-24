@@ -1,15 +1,14 @@
 ﻿import { Router } from 'express';
-import { Op } from 'sequelize';
 import {
   Course,
   CourseStaff,
   Enrollment,
   Lesson,
-  Submission,
   User,
 } from '../db/models/index.js';
 import { requireAuth } from '../middleware/auth.js';
 import { canManageCourse, hasRole } from '../utils/permissions.js';
+import { getLastSubmissionByUserIds } from '../services/activityService.js';
 
 const router = Router();
 
@@ -38,25 +37,28 @@ router.get('/courses', requireAuth, async (req, res, next) => {
       include: [{ model: Course, as: 'course' }],
       order: [[{ model: Course, as: 'course' }, 'created_at', 'DESC']],
     });
-    const items = await Promise.all(
-      staffRows.map(async (row) => {
-        const course = row.course;
-        const [lessonCount, enrollmentCount] = await Promise.all([
-          Lesson.count({ where: { courseId: course.id } }),
-          Enrollment.count({ where: { courseId: course.id } }),
-        ]);
-        return {
-          id: course.id,
-          title: course.title,
-          language: course.language,
-          level: course.level,
-          published: course.published,
-          createdAt: course.createdAt,
-          lessonCount,
-          enrollmentCount,
-        };
-      }),
+    const courseIds = staffRows.map((row) => row.course.id);
+    const [lessonCounts, enrollmentCounts] = await Promise.all([
+      Lesson.count({ where: { courseId: courseIds }, group: ['course_id'] }),
+      Enrollment.count({ where: { courseId: courseIds }, group: ['course_id'] }),
+    ]);
+    const lessonCountMap = Object.fromEntries(lessonCounts.map((item) => [item.courseId, Number(item.count)]));
+    const enrollmentCountMap = Object.fromEntries(
+      enrollmentCounts.map((item) => [item.courseId, Number(item.count)]),
     );
+    const items = staffRows.map((row) => {
+      const course = row.course;
+      return {
+        id: course.id,
+        title: course.title,
+        language: course.language,
+        level: course.level,
+        published: course.published,
+        createdAt: course.createdAt,
+        lessonCount: lessonCountMap[course.id] ?? 0,
+        enrollmentCount: enrollmentCountMap[course.id] ?? 0,
+      };
+    });
     return res.status(200).json({ items });
   } catch (err) {
     next(err);
@@ -79,22 +81,7 @@ router.get('/courses/:courseId/students', requireAuth, async (req, res, next) =>
       include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email'] }],
     });
     const userIds = enrollments.map((x) => x.userId);
-    const activityRows =
-      userIds.length > 0
-        ? await Submission.findAll({
-            where: { userId: { [Op.in]: userIds } },
-            attributes: ['userId', 'createdAt'],
-            order: [['createdAt', 'DESC']],
-          })
-        : [];
-
-    /** @type {Record<string, string>} */
-    const lastByUser = {};
-    for (const row of activityRows) {
-      if (!lastByUser[row.userId]) {
-        lastByUser[row.userId] = row.createdAt;
-      }
-    }
+    const lastByUser = await getLastSubmissionByUserIds(userIds);
 
     let items = enrollments.map((enr) => toStudentRow(enr, lastByUser[enr.userId]));
     const status = req.query.status;
