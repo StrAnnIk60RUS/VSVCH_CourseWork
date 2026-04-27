@@ -242,7 +242,7 @@ router.get('/:courseId', async (req, res, next) => {
       CourseStaff.findAll({
         where: { courseId },
         include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email'] }],
-        order: [['createdAt', 'ASC']],
+        order: [[col('CourseStaff.created_at'), 'ASC']],
       }),
       Lesson.findAll({
         where: { courseId },

@@ -77,7 +77,8 @@ router.post('/login', async (req, res, next) => {
       return res.status(400).json({ error: 'Необходимо указать email и пароль' });
     }
     const user = await User.findOne({ where: { email } });
-    const ok = user && (await bcrypt.compare(password, user.passwordHash));
+    const bcryptOk = user ? await bcrypt.compare(password, user.passwordHash) : false;
+    const ok = user && bcryptOk;
     if (!ok) {
       return res.status(401).json({ error: 'Неверные учётные данные' });
     }

@@ -1,4 +1,5 @@
 ﻿import { Router } from 'express';
+import { col } from 'sequelize';
 import { z } from 'zod';
 import { Course, Favorite } from '../db/models/index.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -15,7 +16,7 @@ router.get('/', requireAuth, async (req, res, next) => {
     const rows = await Favorite.findAll({
       where: { userId: req.authUser.id },
       include: [{ model: Course, as: 'course' }],
-      order: [['createdAt', 'DESC']],
+      order: [[col('Favorite.created_at'), 'DESC']],
     });
     const plainRows = rows.map((row) => row.get({ plain: true }));
     const leadByCourseId = await getLeadTeachersByCourseIds(plainRows.map((row) => row.courseId));

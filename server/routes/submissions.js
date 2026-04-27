@@ -1,4 +1,5 @@
 ﻿import { Router } from 'express';
+import { col } from 'sequelize';
 import { z } from 'zod';
 import { Enrollment, Exercise, Lesson, Submission } from '../db/models/index.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -75,7 +76,7 @@ router.get('/', requireAuth, async (req, res, next) => {
           include: [{ model: Lesson, as: 'lesson', attributes: ['id', 'title', 'courseId'] }],
         },
       ],
-      order: [['createdAt', 'DESC']],
+      order: [[col('Submission.created_at'), 'DESC']],
       limit: 200,
     });
     const items = rows.map((row) => {
