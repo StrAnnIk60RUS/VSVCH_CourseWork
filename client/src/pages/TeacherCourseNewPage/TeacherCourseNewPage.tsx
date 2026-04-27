@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createCourse, getApiError } from '../../api';
-import { PageShell, SectionCard } from '../../components/layout';
+import { NavigationUp, PageShell, SectionCard } from '../../components/layout';
 
 export default function TeacherCourseNewPage() {
   const navigate = useNavigate();
@@ -23,6 +23,7 @@ export default function TeacherCourseNewPage() {
 
   return (
     <PageShell title="Новый курс" description="Создание курса преподавателем.">
+      <NavigationUp links={[{ to: '/teacher/courses', label: 'К списку моих курсов' }]} />
       <SectionCard title="Форма курса">
         <form onSubmit={onSubmit} className="mt-2 space-y-3">
           <input

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getApiError, getEnrollments, unenrollFromCourse } from '../../api';
-import { PageShell, SectionCard } from '../../components/layout';
+import { NavigationUp, PageShell, SectionCard } from '../../components/layout';
 
 export default function MyLearningPage() {
   const [items, setItems] = useState<Array<{ courseId: string; progress: number; course: { title: string } }>>([]);
@@ -15,6 +15,12 @@ export default function MyLearningPage() {
 
   return (
     <PageShell title="Мое обучение" description="Активные записи на курсы и текущий прогресс.">
+      <NavigationUp
+        links={[
+          { to: '/courses', label: 'Каталог курсов' },
+          { to: '/', label: 'На главную' },
+        ]}
+      />
       <SectionCard title="Записи на курсы">
         {error && <p className="text-sm text-red-600">{error}</p>}
         <ul className="mt-3 space-y-2">

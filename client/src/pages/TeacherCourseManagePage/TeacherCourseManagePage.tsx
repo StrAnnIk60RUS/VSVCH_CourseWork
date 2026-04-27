@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { PageShell, SectionCard } from '../../components/layout';
+import { NavigationUp, PageShell, SectionCard } from '../../components/layout';
 import { CourseContentSection } from './CourseContentSection';
 import { ReportsSection } from './ReportsSection';
 import { StudentsSection } from './StudentsSection';
@@ -12,6 +12,7 @@ export default function TeacherCourseManagePage() {
   return (
     <PageShell title={`Управление: ${vm.course?.title ?? ''}`} description="CRUD контента, аналитика и отчеты преподавателя.">
       <div className="space-y-4">
+        <NavigationUp links={[{ to: '/teacher/courses', label: 'К списку моих курсов' }]} />
         <SectionCard title="Уроки и упражнения">
           <CourseContentSection
             courseForm={vm.courseForm}

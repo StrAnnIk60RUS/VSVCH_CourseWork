@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { downloadReport, getApiError, getSubmissions, sendReportEmail } from '../../api';
-import { PageShell, SectionCard } from '../../components/layout';
+import { NavigationUp, PageShell, SectionCard } from '../../components/layout';
 import { useI18n } from '../../hooks/useI18n';
 
 function saveBlob(blob: Blob, filename: string) {
@@ -27,6 +27,13 @@ export default function ProgressPage() {
   return (
     <PageShell title={t.progress.pageTitle} description={t.progress.pageDescription}>
       <div className="space-y-4">
+        <NavigationUp
+          links={[
+            { to: '/me/learning', label: 'Моё обучение' },
+            { to: '/courses', label: 'Каталог курсов' },
+            { to: '/', label: 'На главную' },
+          ]}
+        />
         <SectionCard title={t.progress.history}>
           <ul className="mt-2 space-y-2">
             {submissions.map((s) => (

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getApiError, getCourses } from '../../api';
-import { PageShell, SectionCard } from '../../components/layout';
+import { NavigationUp, PageShell, SectionCard } from '../../components/layout';
 import { useI18n } from '../../hooks/useI18n';
 import { STORAGE_KEYS } from '../../constants/storage';
 import type { CourseListItem } from '../../types/domain';
@@ -75,6 +75,7 @@ export default function CoursesPage() {
   return (
     <PageShell title={t.courses.pageTitle} description={t.courses.pageDescription}>
       <div className="space-y-4">
+        <NavigationUp links={[{ to: '/', label: 'На главную' }]} />
         <SectionCard title={t.courses.filters}>
           <div className="mt-3 grid gap-2 md:grid-cols-4">
             <input

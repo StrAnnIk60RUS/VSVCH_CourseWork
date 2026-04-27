@@ -8,7 +8,7 @@ import {
   removeFavorite,
   unenrollFromCourse,
 } from '../../api';
-import { PageShell, SectionCard } from '../../components/layout';
+import { NavigationUp, PageShell, SectionCard } from '../../components/layout';
 import { useAppSelector } from '../../store/hooks';
 import type { CourseDetail } from '../../types/domain';
 
@@ -66,6 +66,12 @@ export default function CourseDetailPage() {
   return (
     <PageShell title={course?.title ?? 'Курс'} description={course?.description ?? 'Загрузка...'}>
       <div className="space-y-4">
+        <NavigationUp
+          links={[
+            { to: '/courses', label: 'Все курсы' },
+            { to: '/', label: 'На главную' },
+          ]}
+        />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <SectionCard title="О курсе">
           {isLoading && <p className="mt-2 text-sm text-slate-600">Загрузка данных курса...</p>}

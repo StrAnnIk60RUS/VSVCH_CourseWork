@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getApiError, getTeacherCourses } from '../../api';
-import { PageShell, SectionCard } from '../../components/layout';
+import { NavigationUp, PageShell, SectionCard } from '../../components/layout';
 
 export default function TeacherCoursesPage() {
   const [items, setItems] = useState<
@@ -17,6 +17,7 @@ export default function TeacherCoursesPage() {
 
   return (
     <PageShell title="Курсы преподавателя" description="Ваши курсы и переход к управлению.">
+      <NavigationUp links={[{ to: '/', label: 'На главную' }]} />
       <SectionCard title="Список курсов">
         <Link to="/teacher/courses/new" className="inline-block rounded border border-slate-300 px-3 py-2">
           Создать курс
