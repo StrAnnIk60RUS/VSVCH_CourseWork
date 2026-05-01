@@ -155,6 +155,9 @@ CREATE TABLE "reminders" (
     "course_id" TEXT,
     "title" TEXT NOT NULL,
     "remind_at" TIMESTAMP(3) NOT NULL,
+    "delivered_at" TIMESTAMP(3),
+    "email_sent_at" TIMESTAMP(3),
+    "acknowledged_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "reminders_pkey" PRIMARY KEY ("id")
