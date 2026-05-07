@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { getApiError, getCourses } from '../../api';
+import { COURSE_LANGUAGE_OPTIONS, COURSE_LEVEL_OPTIONS } from '../../constants/courseOptions';
 import { NavigationUp, PageShell, SectionCard } from '../../components/layout';
 import { useI18n } from '../../hooks/useI18n';
 import { STORAGE_KEYS } from '../../constants/storage';
@@ -22,12 +23,34 @@ const defaultFilters: CatalogFilters = {
 
 export default function CoursesPage() {
   const t = useI18n();
+  const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState<CatalogFilters>(() => {
+    if (searchParams.toString()) {
+      return {
+        language: searchParams.get('language') ?? '',
+        level: searchParams.get('level') ?? '',
+        search: searchParams.get('search') ?? '',
+        minRating: searchParams.get('minRating') ?? '',
+      };
+    }
     const raw = localStorage.getItem(STORAGE_KEYS.catalogFilters);
     return raw ? ({ ...defaultFilters, ...JSON.parse(raw) } as CatalogFilters) : defaultFilters;
   });
-  const [sort, setSort] = useState(() => localStorage.getItem(STORAGE_KEYS.catalogSort) ?? 'createdAt:desc');
-  const [page, setPage] = useState(() => Number(localStorage.getItem(STORAGE_KEYS.catalogPage) ?? 1));
+  const [sort, setSort] = useState(() => {
+    const sortParam = searchParams.get('sort');
+    const orderParam = searchParams.get('order');
+    if (sortParam || orderParam) {
+      return `${sortParam ?? 'createdAt'}:${orderParam ?? 'desc'}`;
+    }
+    return localStorage.getItem(STORAGE_KEYS.catalogSort) ?? 'createdAt:desc';
+  });
+  const [page, setPage] = useState(() => {
+    const pageFromQuery = Number(searchParams.get('page') ?? NaN);
+    if (Number.isFinite(pageFromQuery) && pageFromQuery > 0) {
+      return pageFromQuery;
+    }
+    return Number(localStorage.getItem(STORAGE_KEYS.catalogPage) ?? 1);
+  });
   const [items, setItems] = useState<CourseListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [error, setError] = useState('');
@@ -75,7 +98,7 @@ export default function CoursesPage() {
   return (
     <PageShell title={t.courses.pageTitle} description={t.courses.pageDescription}>
       <div className="space-y-4">
-        <NavigationUp links={[{ to: '/', label: 'На главную' }]} />
+        <NavigationUp links={[{ to: '/', label: t.progress.homeLink }]} />
         <SectionCard title={t.courses.filters}>
           <div className="mt-3 grid gap-2 md:grid-cols-4">
             <input
@@ -84,18 +107,30 @@ export default function CoursesPage() {
               placeholder={t.courses.searchPlaceholder}
               className="ui-input rounded px-3 py-2"
             />
-            <input
+            <select
               value={filters.language}
               onChange={(e) => setFilters((x) => ({ ...x, language: e.target.value }))}
-              placeholder={t.courses.languagePlaceholder}
               className="ui-input rounded px-3 py-2"
-            />
-            <input
+            >
+              <option value="">{t.courses.languagePlaceholder}</option>
+              {COURSE_LANGUAGE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <select
               value={filters.level}
               onChange={(e) => setFilters((x) => ({ ...x, level: e.target.value }))}
-              placeholder={t.courses.levelPlaceholder}
               className="ui-input rounded px-3 py-2"
-            />
+            >
+              <option value="">{t.courses.levelPlaceholder}</option>
+              {COURSE_LEVEL_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
             <input
               value={filters.minRating}
               onChange={(e) => setFilters((x) => ({ ...x, minRating: e.target.value }))}
@@ -128,16 +163,23 @@ export default function CoursesPage() {
           </div>
         </SectionCard>
         <SectionCard title={`${t.courses.coursesLabel} (${total})`}>
-          {error && <p className="text-red-600">{error}</p>}
+          {error && <p className="text-ui-danger">{error}</p>}
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             {items.map((item) => (
-              <article key={item.id} className="rounded border border-ui-border bg-ui-surface p-4">
+              <article
+                key={item.id}
+                className="ui-card-interactive rounded border border-ui-border bg-ui-surface p-4"
+              >
                 <h3 className="font-semibold text-ui-text">{item.title}</h3>
                 <p className="text-sm text-ui-muted">{item.description}</p>
                 <p className="mt-2 text-xs text-ui-muted">
-                  {item.language} • {item.level} • {t.courses.lessonsLabel}: {item.lessonCount}
+                  {item.language} • {item.level} • {t.courses.lessonsLabel}: {item.lessonCount} •{' '}
+                  {t.courses.sortRating}: {item.ratingAverage ?? t.courseDetail.na} ({item.reviewCount})
                 </p>
-                <Link to={`/courses/${item.id}`} className="mt-3 inline-block text-sm text-ui-link hover:text-ui-link-hover">
+                <Link
+                  to={`/courses/${item.id}`}
+                  className="ui-link-anim mt-3 inline-block text-sm text-ui-link"
+                >
                   {t.courses.openCourse}
                 </Link>
               </article>

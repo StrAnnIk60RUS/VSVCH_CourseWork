@@ -3,23 +3,35 @@ import { Link, useParams } from 'react-router-dom';
 import {
   addFavorite,
   enrollToCourse,
+  getMyCourseReview,
   getApiError,
   getCourseById,
+  getEnrollments,
+  getFavorites,
   removeFavorite,
   unenrollFromCourse,
+  upsertCourseReview,
 } from '../../api';
 import { NavigationUp, PageShell, SectionCard } from '../../components/layout';
-import { useAppSelector } from '../../store/hooks';
+import { useAuthSession } from '../../hooks/useAuthSession';
+import { useI18n } from '../../hooks/useI18n';
 import type { CourseDetail } from '../../types/domain';
 
 export default function CourseDetailPage() {
+  const t = useI18n();
   const { courseId = '' } = useParams();
-  const user = useAppSelector((s) => s.app.user);
+  const { user } = useAuthSession();
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [error, setError] = useState('');
   const [actionMessage, setActionMessage] = useState('');
   const [isBusy, setIsBusy] = useState(false);
+  const [isReviewBusy, setIsReviewBusy] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFavorite, setIsFavorite] = useState<boolean | null>(null);
+  const [isEnrolledInCourse, setIsEnrolledInCourse] = useState<boolean | null>(null);
+  const [myRating, setMyRating] = useState(5);
+  const [myComment, setMyComment] = useState('');
+  const [hasReviewLoaded, setHasReviewLoaded] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -50,6 +62,84 @@ export default function CourseDetailPage() {
 
   const isStudent = user?.roles.includes('STUDENT');
 
+  useEffect(() => {
+    if (!isStudent) {
+      setIsFavorite(null);
+      return;
+    }
+    let active = true;
+    setIsFavorite(null);
+    getFavorites()
+      .then((res) => {
+        if (!active) return;
+        setIsFavorite(res.items.some((item) => item.courseId === courseId));
+      })
+      .catch(() => {
+        if (!active) return;
+        setIsFavorite(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [courseId, isStudent]);
+
+  useEffect(() => {
+    if (!isStudent) {
+      setMyRating(5);
+      setMyComment('');
+      setHasReviewLoaded(true);
+      return;
+    }
+    let active = true;
+    setHasReviewLoaded(false);
+    getMyCourseReview(courseId)
+      .then((res) => {
+        if (!active) return;
+        if (res.myReview) {
+          setMyRating(res.myReview.rating);
+          setMyComment(res.myReview.comment ?? '');
+        } else {
+          setMyRating(5);
+          setMyComment('');
+        }
+      })
+      .catch(() => {
+        if (!active) return;
+        setMyRating(5);
+        setMyComment('');
+      })
+      .finally(() => {
+        if (active) {
+          setHasReviewLoaded(true);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [courseId, isStudent]);
+
+  useEffect(() => {
+    if (!isStudent) {
+      setIsEnrolledInCourse(null);
+      return;
+    }
+    let active = true;
+    setIsEnrolledInCourse(null);
+    getEnrollments()
+      .then((res) => {
+        if (!active) return;
+        setIsEnrolledInCourse(res.items.some((item) => item.courseId === courseId));
+      })
+      .catch(() => {
+        if (!active) return;
+        setIsEnrolledInCourse(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [courseId, isStudent]);
+
   async function runStudentAction(action: () => Promise<void>, successMessage: string) {
     setIsBusy(true);
     setError('');
@@ -63,74 +153,200 @@ export default function CourseDetailPage() {
     }
   }
 
+  async function saveReview() {
+    if (!course) return;
+    setIsReviewBusy(true);
+    setError('');
+    try {
+      const result = await upsertCourseReview(courseId, {
+        rating: myRating,
+        comment: myComment,
+      });
+      setCourse((prev) =>
+        prev
+          ? {
+              ...prev,
+              ratingAverage: result.ratingAverage,
+              reviewCount: result.reviewCount,
+            }
+          : prev,
+      );
+      setActionMessage(t.courseDetail.savedRating);
+    } catch (err) {
+      setError(getApiError(err));
+    } finally {
+      setIsReviewBusy(false);
+    }
+  }
+
   return (
-    <PageShell title={course?.title ?? 'Курс'} description={course?.description ?? 'Загрузка...'}>
+    <PageShell title={course?.title ?? t.courseDetail.titleFallback} description={course?.description ?? t.courseDetail.loadingDescription}>
       <div className="space-y-4">
         <NavigationUp
           links={[
-            { to: '/courses', label: 'Все курсы' },
-            { to: '/', label: 'На главную' },
+            { to: '/courses', label: t.courseDetail.allCourses },
+            { to: '/', label: t.courseDetail.home },
           ]}
         />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <SectionCard title="О курсе">
-          {isLoading && <p className="mt-2 text-sm text-slate-600">Загрузка данных курса...</p>}
-          {!isLoading && !error && !course && <p className="mt-2 text-sm text-slate-600">Курс не найден.</p>}
+        {error && <p className="text-sm text-ui-danger">{error}</p>}
+        <SectionCard title={t.courseDetail.about}>
+          {isLoading && <p className="mt-2 text-sm text-ui-muted">{t.courseDetail.loading}</p>}
+          {!isLoading && !error && !course && <p className="mt-2 text-sm text-ui-muted">{t.courseDetail.notFound}</p>}
           {!isLoading && course && (
             <p className="mt-2 text-sm">
-              {course.language} • {course.level} • рейтинг {course.ratingAverage ?? 'n/a'}
+              {course.language} • {course.level} • {t.courseDetail.ratingWord} {course.ratingAverage ?? t.courseDetail.na} (
+              {course.reviewCount})
             </p>
           )}
           {isStudent && (
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
-                disabled={isBusy || isLoading || !course}
-                onClick={() => runStudentAction(() => enrollToCourse(courseId), 'Вы записаны на курс')}
-                className="rounded border border-slate-300 px-3 py-2 disabled:opacity-60"
+                disabled={isBusy || isLoading || !course || isEnrolledInCourse === null}
+                onClick={() =>
+                  runStudentAction(
+                    async () => {
+                      if (isEnrolledInCourse) {
+                        await unenrollFromCourse(courseId);
+                        setIsEnrolledInCourse(false);
+                        return;
+                      }
+                      await enrollToCourse(courseId);
+                      setIsEnrolledInCourse(true);
+                    },
+                    isEnrolledInCourse ? t.courseDetail.unenrolled : t.courseDetail.enrolled,
+                  )
+                }
+                className={isEnrolledInCourse ? 'ui-btn-danger' : 'ui-btn-primary'}
               >
-                Записаться
+                {isEnrolledInCourse === null
+                  ? t.courseDetail.checkingEnrollment
+                  : isEnrolledInCourse
+                    ? t.courseDetail.unenroll
+                    : t.courseDetail.enroll}
               </button>
               <button
                 type="button"
-                disabled={isBusy || isLoading || !course}
-                onClick={() => runStudentAction(() => unenrollFromCourse(courseId), 'Запись на курс удалена')}
-                className="rounded border border-slate-300 px-3 py-2 disabled:opacity-60"
+                disabled={isBusy || isLoading || !course || isFavorite === null}
+                onClick={() =>
+                  runStudentAction(
+                    async () => {
+                      if (isFavorite) {
+                        await removeFavorite(courseId);
+                        setIsFavorite(false);
+                        return;
+                      }
+                      await addFavorite(courseId);
+                      setIsFavorite(true);
+                    },
+                    isFavorite ? t.courseDetail.removedFromFavorites : t.courseDetail.addedToFavorites,
+                  )
+                }
+                className={isFavorite ? 'ui-btn-danger' : 'ui-btn-secondary'}
               >
-                Отписаться
+                {isFavorite === null
+                  ? t.courseDetail.checkingFavorites
+                  : isFavorite
+                    ? t.courseDetail.removeFavorite
+                    : t.courseDetail.addFavorite}
               </button>
-              <button
-                type="button"
-                disabled={isBusy || isLoading || !course}
-                onClick={() => runStudentAction(() => addFavorite(courseId), 'Курс добавлен в избранное')}
-                className="rounded border border-slate-300 px-3 py-2 disabled:opacity-60"
-              >
-                В избранное
-              </button>
-              <button
-                type="button"
-                disabled={isBusy || isLoading || !course}
-                onClick={() => runStudentAction(() => removeFavorite(courseId), 'Курс удален из избранного')}
-                className="rounded border border-slate-300 px-3 py-2 disabled:opacity-60"
-              >
-                Убрать из избранного
-              </button>
+              <Link to={`/courses/${courseId}/reviews`} className="ui-btn-secondary inline-flex items-center">
+                {t.courseDetail.reviews}
+              </Link>
+            </div>
+          )}
+          {!isStudent && (
+            <div className="mt-3">
+              <Link to={`/courses/${courseId}/reviews`} className="ui-btn-secondary inline-flex items-center">
+                {t.courseDetail.reviews}
+              </Link>
             </div>
           )}
           {actionMessage && !error && (
-            <p className="mt-2 text-sm text-emerald-700">{actionMessage}</p>
+            <p className="mt-2 text-sm text-ui-success">{actionMessage}</p>
           )}
         </SectionCard>
-        <SectionCard title="Уроки">
+        {isStudent && (
+          <SectionCard title={t.courseDetail.rateSection}>
+            <div className="mt-2 space-y-3">
+              <label className="block text-sm">
+                <span className="mb-1 block text-ui-muted">{t.courseDetail.yourRating}</span>
+                <select
+                  className="ui-input w-full rounded px-3 py-2"
+                  value={myRating}
+                  onChange={(e) => setMyRating(Number(e.target.value))}
+                  disabled={!hasReviewLoaded || isReviewBusy}
+                >
+                  <option value={5}>5</option>
+                  <option value={4}>4</option>
+                  <option value={3}>3</option>
+                  <option value={2}>2</option>
+                  <option value={1}>1</option>
+                </select>
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-ui-muted">{t.courseDetail.optionalComment}</span>
+                <textarea
+                  className="ui-input min-h-[96px] w-full rounded px-3 py-2"
+                  value={myComment}
+                  onChange={(e) => setMyComment(e.target.value)}
+                  maxLength={1000}
+                  disabled={!hasReviewLoaded || isReviewBusy}
+                />
+              </label>
+              <button
+                type="button"
+                className="ui-btn-primary"
+                onClick={saveReview}
+                disabled={
+                  isLoading ||
+                  isReviewBusy ||
+                  !hasReviewLoaded ||
+                  !course ||
+                  !isEnrolledInCourse
+                }
+              >
+                {isReviewBusy ? t.courseDetail.savePending : t.courseDetail.saveRating}
+              </button>
+              {isEnrolledInCourse === false && (
+                <p className="text-sm text-ui-muted">
+                  {t.courseDetail.rateAfterEnroll}
+                </p>
+              )}
+            </div>
+          </SectionCard>
+        )}
+        <SectionCard title={t.courseDetail.lessons}>
           <ul className="mt-2 space-y-2">
             {course?.lessons.map((lesson) => (
-              <li key={lesson.id} className="rounded border border-slate-200 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span>
-                    {lesson.order}. {lesson.title}
+              <li
+                key={lesson.id}
+                className="ui-card-interactive rounded border border-ui-border bg-ui-surface p-3"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <span>
+                      {lesson.order}. {lesson.title}
+                    </span>
+                    <p className="mt-1 text-xs text-ui-muted">
+                      {t.courseDetail.lessonProgress}: <span className="font-medium text-ui-text">{lesson.progressPercent}%</span>
+                    </p>
+                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded bg-ui-subtle">
+                      <div
+                        className="h-full rounded bg-ui-success transition-[width]"
+                        style={{ width: `${lesson.progressPercent}%` }}
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium text-ui-muted">
+                    {lesson.progressPercent === 100 ? t.courseDetail.completed : t.courseDetail.inProgress}
                   </span>
-                  <Link to={`/courses/${courseId}/lessons/${lesson.id}`} className="text-brand-700">
-                    Открыть
+                  <Link
+                    to={`/courses/${courseId}/lessons/${lesson.id}`}
+                    className="ui-link-anim shrink-0 text-ui-link"
+                  >
+                    {t.courseDetail.open}
                   </Link>
                 </div>
               </li>

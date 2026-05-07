@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { clearAppStorage } from '../../constants/storage';
+import { clearUiStorage } from '../../constants/storage';
 import { getApiError, getProfile, updateProfileName } from '../../api';
 import { PageShell, SectionCard } from '../../components/layout';
 import { useI18n } from '../../hooks/useI18n';
@@ -38,7 +38,7 @@ export default function ProfilePage() {
                 await updateProfileName(name);
                 setStatus(t.profile.nameUpdated);
               }}
-              className="ui-button-secondary rounded px-3 py-2"
+              className="ui-btn-primary"
             >
               {t.profile.save}
             </button>
@@ -48,7 +48,7 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => {
-              clearAppStorage();
+              clearUiStorage();
               setStatus(t.profile.localSettingsReset);
             }}
             className="ui-button-secondary rounded px-3 py-2"

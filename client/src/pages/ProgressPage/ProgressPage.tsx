@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
-import { downloadReport, getApiError, getSubmissions, sendReportEmail } from '../../api';
+import {
+  downloadReport,
+  getApiError,
+  getSubmissions,
+  sendReportEmail,
+  type SubmissionListItem,
+} from '../../api';
 import { NavigationUp, PageShell, SectionCard } from '../../components/layout';
 import { useI18n } from '../../hooks/useI18n';
 
@@ -14,7 +20,7 @@ function saveBlob(blob: Blob, filename: string) {
 
 export default function ProgressPage() {
   const t = useI18n();
-  const [submissions, setSubmissions] = useState<Array<{ id: string; createdAt: string; score: number; exercise: { title: string; lesson?: { title: string } } }>>([]);
+  const [submissions, setSubmissions] = useState<SubmissionListItem[]>([]);
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('');
 
@@ -29,9 +35,9 @@ export default function ProgressPage() {
       <div className="space-y-4">
         <NavigationUp
           links={[
-            { to: '/me/learning', label: 'Моё обучение' },
-            { to: '/courses', label: 'Каталог курсов' },
-            { to: '/', label: 'На главную' },
+            { to: '/me/learning', label: t.progress.myLearningLink },
+            { to: '/courses', label: t.progress.coursesLink },
+            { to: '/', label: t.progress.homeLink },
           ]}
         />
         <SectionCard title={t.progress.history}>
@@ -66,7 +72,7 @@ export default function ProgressPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
-              placeholder="email@example.com"
+              placeholder={t.progress.emailPlaceholder}
               className="ui-input w-full rounded px-3 py-2"
             />
             <button
