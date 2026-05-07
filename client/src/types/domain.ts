@@ -29,6 +29,13 @@ export interface CourseDetail {
   level: string;
   published: boolean;
   ratingAverage: number | null;
+  reviewCount: number;
   leadTeacher: { id: string; name: string; email: string } | null;
-  lessons: Array<{ id: string; title: string; order: number; exerciseCount: number }>;
+  lessons: Array<{
+    id: string;
+    title: string;
+    order: number;
+    exerciseCount: number;
+    progressPercent: number;
+  }>;
 }

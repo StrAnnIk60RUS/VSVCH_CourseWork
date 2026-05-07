@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAppSelector } from '../../store/hooks';
+import { useI18n } from '../../hooks/useI18n';
+import { useAuthSession } from '../../hooks/useAuthSession';
 import type { UserRole } from '../../types/domain';
 
 interface RequireAuthProps {
@@ -9,10 +10,11 @@ interface RequireAuthProps {
 }
 
 export function RequireAuth({ children, roles }: RequireAuthProps) {
-  const { user, authChecked } = useAppSelector((s) => s.app);
+  const t = useI18n();
+  const { user, authChecked } = useAuthSession();
 
   if (!authChecked) {
-    return <div className="p-8 text-sm text-slate-600">Loading session...</div>;
+    return <div className="p-8 text-sm text-ui-muted">{t.auth.loadingSession}</div>;
   }
   if (!user) {
     return <Navigate to="/login" replace />;

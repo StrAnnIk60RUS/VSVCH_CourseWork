@@ -3,7 +3,17 @@ import { http } from './http';
 export async function getTeacherCourses() {
   const { data } = await http.get('/teacher/courses');
   return data as {
-    items: Array<{ id: string; title: string; language: string; level: string; lessonCount: number; enrollmentCount: number }>;
+    items: Array<{
+      id: string;
+      title: string;
+      language: string;
+      level: string;
+      published: boolean;
+      ratingAverage: number | null;
+      lessonCount: number;
+      enrollmentCount: number;
+      reviewCount: number;
+    }>;
   };
 }
 

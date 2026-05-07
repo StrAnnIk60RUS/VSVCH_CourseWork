@@ -1,7 +1,6 @@
 export * from './authApi';
 export * from './coursesApi';
 export * from './favoritesApi';
-export * from './featureApi';
 export * from './learningApi';
 export * from './profileApi';
 export * from './remindersApi';
