@@ -15,3 +15,14 @@ export function clearAppStorage() {
     }
   });
 }
+
+export function clearUiStorage() {
+  const uiKeys = [
+    STORAGE_KEYS.theme,
+    STORAGE_KEYS.uiLanguage,
+    STORAGE_KEYS.catalogFilters,
+    STORAGE_KEYS.catalogSort,
+    STORAGE_KEYS.catalogPage,
+  ];
+  uiKeys.forEach((key) => localStorage.removeItem(key));
+}
