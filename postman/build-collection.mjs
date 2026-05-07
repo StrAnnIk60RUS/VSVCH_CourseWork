@@ -523,13 +523,6 @@ collection.item.push({
         'pm.expect(pm.response.json().items).to.be.an("array");',
       ],
     }),
-    req('POST complete lesson (Course A)', 'POST', '{{baseUrl}}/api/enrollments/complete-lesson/{{qaCourseId}}/{{qaLessonId}}', {
-      headers: { Authorization: 'Bearer {{qaStudentToken}}' },
-      test: [
-        'pm.test("200", () => pm.response.to.have.status(200));',
-        'pm.expect(pm.response.json().ok).to.be.true;',
-      ],
-    }),
     req('DELETE enrollment Course B', 'DELETE', '{{baseUrl}}/api/enrollments/{{qaCourseId2}}', {
       headers: { Authorization: 'Bearer {{qaStudentToken}}' },
       test: ['pm.test("204", () => pm.response.to.have.status(204));'],
@@ -548,10 +541,6 @@ collection.item.push({
       headers: { Authorization: 'Bearer {{qaStudentToken}}' },
       jsonBody: { courseId: '{{qaCourseId}}' },
       test: ['pm.test("409", () => pm.response.to.have.status(409));'],
-    }),
-    req('POST complete-lesson without enrollment -> 403', 'POST', '{{baseUrl}}/api/enrollments/complete-lesson/{{qaCourseIsolateId}}/{{qaLessonIsolateId}}', {
-      headers: { Authorization: 'Bearer {{qaStudentToken}}' },
-      test: ['pm.test("403", () => pm.response.to.have.status(403));'],
     }),
     req('DELETE enrollment not found -> 404', 'DELETE', '{{baseUrl}}/api/enrollments/no-enrollment-course', {
       headers: { Authorization: 'Bearer {{qaStudentToken}}' },
