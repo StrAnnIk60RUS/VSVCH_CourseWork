@@ -15,7 +15,6 @@
 - `exercises`
 - `enrollments`
 - `certificates` (выдача PDF: уникальный `document_number`, связь с `enrollment`)
-- `lesson_completions`
 - `submissions`
 - `favorites`
 - `reminders`
@@ -32,7 +31,6 @@
 - Уникальность `users.email`.
 - Уникальность пары `enrollments(user_id, course_id)`.
 - Уникальность пары `favorites(user_id, course_id)`.
-- Уникальность пары `lesson_completions(user_id, lesson_id)`.
 - Уникальность пары `course_reviews(user_id, course_id)`.
 - Уникальность `certificates.enrollment_id` и `certificates.document_number`.
 - Уникальность тройки `course_staff(course_id, user_id, staff_role)`.

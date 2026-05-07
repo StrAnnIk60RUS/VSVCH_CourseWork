@@ -14,21 +14,21 @@
 
 | Требование | Статус | Краткое обоснование |
 |------------|--------|---------------------|
-| (1) ≥2 ролей, разный функционал | **Missing** | Роли описаны в доках; в API нет JWT/role middleware, все маршруты — заглушки. |
-| (2) Страницы входа и регистрации | **Partial** | Маршруты `/login`, `/register` есть; форм, запросов к API и состояния сессии нет. |
-| (3) ≥7 страниц кроме auth | **Partial** | В [client/src/App.tsx](client/src/App.tsx) задано ≥11 маршрутов без auth; страницы — каркас текста без бизнес-UI. |
-| (4) ≥15 функций (не auth) | **Missing** | Нет реализованных фильтров, сортировок, CRUD, отчётов и т.д. — только placeholder-текст на страницах. |
-| (5) ≥2 отчёта (pdf/docx/email/…) | **Missing** | [server/routes/reportsHttp.js](server/routes/reportsHttp.js) — заглушка `GET /`. |
-| (6) ≥20 разных типов компонентов | **Missing** | Нет каталога `client/src/components/` с реальными компонентами; MUI/Tailwind-классы в страницах не используются для UI-kit. |
-| (7) Адаптив 1920→320, без гориз. скролла | **Missing** | Tailwind в зависимостях есть, но страницы не стилизованы под брейкпоинты. |
-| (8) Интерактивность, hover, анимации | **Missing** | Нет кнопок/ссылок с реальными стилями состояний и анимаций. |
-| (9) localStorage + сброс | **Missing** | `localStorage` в [client/](client/) не используется; кнопки сброса нет. |
-| (10) ≥8 таблиц БД, 3НФ | **Partial** | Схема задана: **14 таблиц** в [server/database/migrations/init-schema.sql](../../server/database/migrations/init-schema.sql), модели Sequelize ([server/db/models/index.js](../../server/db/models/index.js)), одна начальная миграция `20260410150000-initial-schema.cjs`; описание — [docs/DATABASE.md](../DATABASE.md). Маршруты Express пока не используют БД. |
-| (11) REST + CRUD | **Partial** | В [server/server.js](server/server.js) смонтированы REST-префиксы; каждый файл в [server/routes/](server/routes/) — только `GET /` stub (см. [server/routes/README_STUBS.md](server/routes/README_STUBS.md)). |
-| (12) Валидная семантическая вёрстка, React, Chrome | **Partial** | React + семантические теги на страницах есть; валидатор HTML и прогон в Chrome — вне кода; `recharts` в package.json, график не подключён. |
+| (1) ≥2 ролей, разный функционал | **Implemented** | Роли `STUDENT`/`TEACHER` есть в БД и JWT-сессии; backend использует `requireAuth` и проверки прав на курс, frontend закрывает маршруты через `RequireAuth`. |
+| (2) Страницы входа и регистрации | **Implemented** | `/login` и `/register` содержат формы, вызывают API и сохраняют сессию клиента. |
+| (3) ≥7 страниц кроме auth | **Implemented** | В [client/src/App.tsx](../../client/src/App.tsx) задан набор публичных, student и teacher маршрутов: каталог, карточка, отзывы, урок, обучение, избранное, прогресс, напоминания, профиль, кабинеты преподавателя. |
+| (4) ≥15 функций (не auth) | **Implemented** | Реализованы каталог с фильтрами/поиском/сортировкой/пагинацией, enroll/unenroll, избранное, уроки, submissions, пересчёт прогресса, teacher CRUD, CSV, отчёты, напоминания и сброс UI-настроек. |
+| (5) ≥2 отчёта (pdf/docx/email/…) | **Implemented** | [server/routes/reportsHttp.js](../../server/routes/reportsHttp.js) отдаёт student/course PDF и DOCX, teacher analytics и отправку на e-mail с demo fallback без SMTP. |
+| (6) ≥20 разных типов компонентов | **Partial** | UI использует переиспользуемые layout/auth/course-компоненты и Tailwind-стили, но финальный реестр 20 разных типов нужно подтвердить перед сдачей. |
+| (7) Адаптив 1920→320, без гориз. скролла | **Partial** | Страницы используют responsive Tailwind-сетки и flex-layout; нужен финальный ручной прогон по брейкпоинтам. |
+| (8) Интерактивность, hover, анимации | **Partial** | Базовые состояния интерактивных элементов вынесены в global styles/Tailwind-классы; перед сдачей нужен UI smoke. |
+| (9) localStorage + сброс | **Implemented** | Настройки темы/языка/каталога сохраняются в `localStorage`; сброс UI-настроек доступен в навигации и профиле. |
+| (10) ≥8 таблиц БД, 3НФ | **Implemented** | Схема содержит **13 таблиц** в [server/database/migrations/init-schema.sql](../../server/database/migrations/init-schema.sql), модели Sequelize — [server/db/models/index.js](../../server/db/models/index.js), история изменений — в Sequelize migrations. |
+| (11) REST + CRUD | **Implemented** | [server/app.js](../../server/app.js) монтирует реальные REST-группы; статус route-модулей описан в [server/routes/README_STUBS.md](../../server/routes/README_STUBS.md). |
+| (12) Валидная семантическая вёрстка, React, Chrome | **Partial** | React-приложение и семантические страницы реализованы; HTML-валидатор и финальный прогон Chrome остаются ручными gate-проверками. |
 | (13) История коммитов по гайду | **N/A в коде** | Проверяется в git-истории; в репозитории зафиксированы правила Conventional Commits (раздел 15). |
 
-**Итог аудита:** каркас фронта (маршруты + семантический скелет страниц) и каркас API (монтирование путей + health) есть; **критичная часть требований курсовой по функционалу, БД и UI пока не реализована**.
+**Итог аудита:** проект вышел за пределы каркаса: клиент, API, БД, роли, отчёты и основные пользовательские сценарии реализованы. Открытыми остаются финальные smoke/Chrome/адаптивные проверки и подтверждение полного UI-компонентного реестра.
 
 ## 2) Технологический baseline (обязательный)
 
@@ -36,14 +36,14 @@
 
 **Факт в репозитории:**
 - **Frontend:** React + TypeScript + **Webpack** (`webpack`, `webpack-dev-server`, `ts-loader`); зависимости: `axios`, `@reduxjs/toolkit`, `react-redux`, `recharts`, Tailwind (PostCSS). Redux `Provider` и `store/` подключены в [client/src/main.tsx](client/src/main.tsx).
-- **Backend:** Express; маршруты — **временные заглушки**, без слоёв controllers/services и без БД.
-- **Database / ORM:** PostgreSQL; Sequelize — модели в `server/db/models/`, воспроизводимая схема через `server/database/migrations/init-schema.sql` и миграцию `20260410150000-initial-schema.cjs` ([docs/DATABASE.md](../DATABASE.md)). Подключение из обработчиков маршрутов появится при реализации слоя доступа к данным.
+- **Backend:** Express; доменные обработчики живут в `server/routes/`, общая логика вынесена в `server/services/` и `server/utils/`, auth/roles проходят через middleware и проверки прав на курс.
+- **Database / ORM:** PostgreSQL; Sequelize — модели в `server/db/models/`, воспроизводимая схема через `server/database/migrations/init-schema.sql`, начальную миграцию и последующие `.cjs` миграции ([docs/DATABASE.md](../DATABASE.md)).
 
 **Repository model:** монорепозиторий с `client/` и `server/`.
 
 ## 3) Архитектурные принципы
-- Слои backend: `routes -> controllers -> services -> data access`.
-- Бизнес-логика не размещается в контроллерах и React-компонентах страниц.
+- Текущий backend: `routes -> services/utils -> Sequelize models`; отдельный `controllers/` слой не используется.
+- Бизнес-логика не размещается в React-компонентах страниц; при росте route handlers её нужно выносить в `services/`.
 - Ошибки API обрабатываются централизованно.
 - Ролевой доступ проверяется в middleware.
 - Контракты API не ломаются без версии/миграционного описания.
@@ -58,11 +58,11 @@
 - `hooks/`, `utils/`, `types/`, `styles/` — общие абстракции.
 
 ### Backend (`server/`)
-- `routes/` — REST-маршруты по доменным областям.
-- `controllers/` — прием/ответ HTTP.
-- `services/` — бизнес-правила.
+- `routes/` — REST-маршруты и HTTP handlers по доменным областям.
+- `services/` — отчёты, активность и доменные операции, которые переиспользуются между route handlers.
 - `middleware/` — auth/roles/validation/error.
-- `models/` или ORM schema — данные, связи, ограничения.
+- `db/models/` — Sequelize-модели, связи и ORM-описание.
+- `database/migrations/` — SQL-источник схемы и Sequelize migrations.
 - `config/` — окружение, БД, безопасность.
 
 ## 5) Data flow (высокоуровнево)
@@ -189,10 +189,10 @@ flowchart LR
 - Очистка должна быть безопасной: удаляются только ключи префикса приложения (например, `vsvh:`).
 
 ## 13) База данных и 3НФ (минимум)
-- Не менее 8 связанных таблиц (**в проекте — 14**, см. [docs/DATABASE.md](../DATABASE.md)).
+- Не менее 8 связанных таблиц (**в проекте — 13**, см. [docs/DATABASE.md](../DATABASE.md)).
 - Исключены дубли данных и транзитивные зависимости (с осознанными исключениями: кэш `rating_average`, JSONB в упражнениях/отправках — зафиксировано в `DATABASE.md`).
 - Для связей заданы PK/FK и ключевые ограничения уникальности.
-- Одна начальная миграция Sequelize + `init-schema.sql` для воспроизводимости схемы.
+- Начальная миграция Sequelize применяет `init-schema.sql`; последующие `.cjs` миграции фиксируют эволюцию схемы.
 
 ## 14) Технические требования (frontend)
 - Используется React.
@@ -222,17 +222,17 @@ flowchart LR
 
 | ID | Требование | Статус | Где смотреть / что сделать |
 |----|------------|--------|----------------------------|
-| R1 | Две роли, разный UX | Missing | Реализовать проверку ролей на сервере + разные маршруты/меню на клиенте по `docs/PAGES_AND_FEATURES.md`. |
-| R2 | Login + Register | Partial | Добавить формы, вызовы API, хранение JWT (решение: memory + refresh или httpOnly cookie — зафиксировать). |
-| R3 | ≥7 страниц без auth | Partial | Маршруты уже есть в `App.tsx`; наполнить страницы данными и действиями. |
-| R4 | ≥15 функций | Missing | Реализовать сценарии из раздела 9 с привязкой к REST. |
-| R5 | ≥2 отчёта | Missing | Реализовать `reports` по `FUNCTIONAL_REQUIREMENTS.md` (PDF/DOCX/email). |
-| R6 | ≥20 типов компонентов | Missing | Создать `client/src/components/` и использовать типы из раздела 10 на реальных экранах. |
-| R7 | Адаптив | Missing | Подключить Tailwind (или MUI Grid) к layout; пройти брейкпоинты из раздела 11. |
-| R8 | Интерактивность | Missing | Общие стили `:hover/:focus`, `transition`, `cursor-pointer` на действиях. |
-| R9 | localStorage + сброс | Missing | Ключи с префиксом `vsvh:`; кнопка на профиле — см. `PAGES_AND_FEATURES.md`. |
-| R10 | ≥8 таблиц 3НФ | **Partial** | Схема и миграция есть ([docs/DATABASE.md](../DATABASE.md)); остаётся связать маршруты с БД и при сдаче приложить ER/описание связей. |
-| R11 | REST CRUD | Partial | Заменить заглушки в `server/routes/*.js` на полные handlers + сервисы. |
+| R1 | Две роли, разный UX | Implemented | `roles`/`user_roles`, JWT `requireAuth`, проверки `canManageCourse`, protected routes в `client/src/App.tsx`. |
+| R2 | Login + Register | Implemented | Формы auth-страниц вызывают `client/src/api/authApi.ts`, JWT хранится в `localStorage` и используется API client. |
+| R3 | ≥7 страниц без auth | Implemented | Маршруты и страницы перечислены в `client/src/App.tsx` и `client/src/pages/`. |
+| R4 | ≥15 функций | Implemented | Основные сценарии реализованы в `client/src/api/`, `client/src/pages/` и `server/routes/`; перед сдачей сверить демонстрационный чеклист. |
+| R5 | ≥2 отчёта | Implemented | `server/routes/reportsHttp.js` и `server/services/reportService.js`: PDF/DOCX/e-mail + teacher analytics. |
+| R6 | ≥20 типов компонентов | Partial | UI-компоненты есть в `client/src/components/`, но финальный подсчёт 20 типов нужно подтвердить вручную. |
+| R7 | Адаптив | Partial | Responsive Tailwind-классы есть; нужен ручной прогон ширин из раздела 11. |
+| R8 | Интерактивность | Partial | Hover/focus/active состояния заданы в стилях и компонентах; нужен финальный UI smoke. |
+| R9 | localStorage + сброс | Implemented | `client/src/constants/storage.ts`, каталог, тема/язык и кнопки сброса в профиле/навигации. |
+| R10 | ≥8 таблиц 3НФ | **Implemented** | 13 таблиц, PK/FK/unique/indexes в `server/database/migrations/init-schema.sql`; модели — `server/db/models/index.js`. |
+| R11 | REST CRUD | Implemented | Route-модули реализуют auth/courses/lessons/exercises/enrollments/favorites/reminders/teacher/reports; статус — `server/routes/README_STUBS.md`. |
 | R12 | React, семантика, валидность | Partial | Прогнать сборку; проверить HTML валидатором; финальный smoke в Chrome. |
 | R13 | Conventional Commits | N/A | Вести историю по разделу 15. |
 
@@ -243,12 +243,12 @@ flowchart LR
 | Артефакт | Назначение |
 |----------|------------|
 | [client/src/App.tsx](client/src/App.tsx) | Список маршрутов (страницы). |
-| [client/src/pages/**/*.tsx](client/src/pages/) | Каркас страниц (семантика без бизнес-логики). |
-| [client/src/main.tsx](client/src/main.tsx) | Точка входа; Redux пока не подключён. |
+| [client/src/pages/**/*.tsx](client/src/pages/) | Реализованные страницы и контейнеры пользовательских сценариев. |
+| [client/src/main.tsx](client/src/main.tsx) | Точка входа; подключение Redux Provider и глобальных стилей. |
 | [client/package.json](client/package.json) | Зависимости (axios, RTK, recharts, tailwind). |
 | [server/server.js](server/server.js) | Монтирование `/api/*`, рабочий `GET /api/health`, CORS, глобальный `500` handler. |
 | [server/routes/README_STUBS.md](server/routes/README_STUBS.md) | Официальное описание состояния API. |
-| [server/routes/*.js](server/routes/) | Заглушки по одному `GET /` на модуль. |
+| [server/routes/*.js](server/routes/) | Реальные REST handlers по доменным областям. |
 | [docs/FUNCTIONAL_REQUIREMENTS.md](../FUNCTIONAL_REQUIREMENTS.md) | Контракты и критерии приёмки для реализации. |
 | [docs/DATABASE.md](../DATABASE.md) | Актуальная схема PostgreSQL (таблицы, ENUM, ограничения). |
 | [docs/PAGES_AND_FEATURES.md](../PAGES_AND_FEATURES.md) | Карта экранов и связь с API. |
@@ -260,11 +260,11 @@ flowchart LR
 Рекомендуемый порядок для Cursor (от блокирующих к защите):
 
 1. **P0 — Данные и API:** схема БД (≥8 таблиц, 3НФ; см. [docs/DATABASE.md](../DATABASE.md)), реализация маршрутов по `FUNCTIONAL_REQUIREMENTS.md`, JWT и role middleware.
-2. **P0 — Связка клиент–сервер:** `client/src/api/`, базовый `axios` + interceptors, Redux store или иной согласованный state для auth и списков.
-3. **P1 — Функции курсовой:** каталог (фильтр/сорт/пагинация), enroll, уроки, submissions, teacher CRUD, отчёты.
-4. **P1 — UI-kit:** минимум 20 именованных компонентов в `components/`, единые стили состояний.
-5. **P2 — localStorage и сброс:** сохранение настроек каталога + кнопка очистки на профиле.
-6. **P2 — Адаптив и полировка:** брейкпоинты, график (recharts) на `/me/progress`, snackbar для действий.
+2. **P0 — Связка клиент–сервер:** `client/src/api/`, axios interceptor, Redux session state и страницы подключены к API.
+3. **P1 — Функции курсовой:** каталог, enroll, уроки, submissions, teacher CRUD, отчёты и напоминания реализованы; поддерживать демонстрационный сценарий актуальным.
+4. **P1 — UI-kit:** подтвердить минимум 20 именованных типов компонентов в `components/`/страницах и единые стили состояний.
+5. **P2 — localStorage и сброс:** сохранение настроек каталога + кнопки очистки профиля/навигации реализованы; проверить только UX-текст и сценарий.
+6. **P2 — Адаптив и полировка:** брейкпоинты, график (recharts) на `/me/progress`, финальный smoke действий.
 7. **P3 — Сдача:** валидатор HTML, скриншоты/чеклист Chrome, история коммитов по Conventional Commits.
 
 ---

@@ -36,6 +36,7 @@ VSVH/
 ├─ client/          # React-приложение (Webpack)
 ├─ server/          # Express API + Sequelize + миграции/seed
 ├─ docs/            # функциональные требования и карта страниц
+├─ postman/         # генерация и окружение Postman-коллекции API
 ├─ package.json     # npm workspaces (client, server)
 └─ README.md
 ```
@@ -71,7 +72,7 @@ CLIENT_ORIGIN="http://localhost:5173"
 
 ### 4) Миграции и seed данных
 
-Схема PostgreSQL описана в [`docs/DATABASE.md`](docs/DATABASE.md); SQL-источник — `server/database/migrations/init-schema.sql`. Применяется **одна** начальная миграция Sequelize (`20260410150000-initial-schema.cjs`). При смене состава миграций на уже заполненной БД может понадобиться синхронизация таблицы `SequelizeMeta` (см. комментарий в файле миграции).
+Схема PostgreSQL описана в [`docs/DATABASE.md`](docs/DATABASE.md); SQL-источник — `server/database/migrations/init-schema.sql`. История БД ведётся через Sequelize migrations в `server/database/migrations`: начальная миграция применяет `init-schema.sql`, последующие миграции фиксируют изменения схемы.
 
 Из корня репозитория:
 
@@ -111,6 +112,7 @@ npm run dev
 ### Server (`server/package.json`)
 - `npm run dev -w server` — запуск API в watch-режиме.
 - `npm run start -w server` — запуск API без watch.
+- `npm test -w server` — integration-тесты API.
 - `npm run db:migrate -w server` — миграции Sequelize.
 - `npm run db:seed -w server` — seed-скрипт.
 
