@@ -201,23 +201,6 @@ Certificate.init(
   },
 );
 
-class LessonCompletion extends Model {}
-LessonCompletion.init(
-  {
-    id: { type: DataTypes.STRING, primaryKey: true, defaultValue: () => randomUUID() },
-    userId: { type: DataTypes.STRING, allowNull: false, field: 'user_id' },
-    lessonId: { type: DataTypes.STRING, allowNull: false, field: 'lesson_id' },
-    completedAt: { type: DataTypes.DATE, allowNull: false, field: 'completed_at', defaultValue: DataTypes.NOW },
-  },
-  {
-    sequelize,
-    tableName: 'lesson_completions',
-    underscored: true,
-    timestamps: false,
-    indexes: [{ unique: true, fields: ['user_id', 'lesson_id'] }],
-  },
-);
-
 class Submission extends Model {}
 Submission.init(
   {
@@ -313,11 +296,6 @@ Enrollment.belongsTo(Course, { foreignKey: 'course_id', as: 'course' });
 Enrollment.hasOne(Certificate, { foreignKey: 'enrollment_id', as: 'certificate' });
 Certificate.belongsTo(Enrollment, { foreignKey: 'enrollment_id', as: 'enrollment' });
 
-User.hasMany(LessonCompletion, { foreignKey: 'user_id', as: 'lessonProgress' });
-Lesson.hasMany(LessonCompletion, { foreignKey: 'lesson_id', as: 'completions' });
-LessonCompletion.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
-LessonCompletion.belongsTo(Lesson, { foreignKey: 'lesson_id', as: 'lesson' });
-
 User.hasMany(Submission, { foreignKey: 'user_id', as: 'submissions' });
 Exercise.hasMany(Submission, { foreignKey: 'exercise_id', as: 'submissions' });
 Submission.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
@@ -345,7 +323,6 @@ export {
   Exercise,
   Enrollment,
   Certificate,
-  LessonCompletion,
   Submission,
   Favorite,
   Reminder,

@@ -119,15 +119,6 @@ CREATE TABLE "certificates" (
     CONSTRAINT "certificates_document_number_key" UNIQUE ("document_number")
 );
 
-CREATE TABLE "lesson_completions" (
-    "id" TEXT NOT NULL,
-    "user_id" TEXT NOT NULL,
-    "lesson_id" TEXT NOT NULL,
-    "completed_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "lesson_completions_pkey" PRIMARY KEY ("id")
-);
-
 CREATE TABLE "submissions" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
@@ -154,11 +145,11 @@ CREATE TABLE "reminders" (
     "user_id" TEXT NOT NULL,
     "course_id" TEXT,
     "title" TEXT NOT NULL,
-    "remind_at" TIMESTAMP(3) NOT NULL,
-    "delivered_at" TIMESTAMP(3),
-    "email_sent_at" TIMESTAMP(3),
-    "acknowledged_at" TIMESTAMP(3),
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "remind_at" TIMESTAMPTZ(3) NOT NULL,
+    "delivered_at" TIMESTAMPTZ(3),
+    "email_sent_at" TIMESTAMPTZ(3),
+    "acknowledged_at" TIMESTAMPTZ(3),
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "reminders_pkey" PRIMARY KEY ("id")
 );
@@ -168,8 +159,6 @@ CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 CREATE UNIQUE INDEX "course_reviews_user_id_course_id_key" ON "course_reviews"("user_id", "course_id");
 
 CREATE UNIQUE INDEX "enrollments_user_id_course_id_key" ON "enrollments"("user_id", "course_id");
-
-CREATE UNIQUE INDEX "lesson_completions_user_id_lesson_id_key" ON "lesson_completions"("user_id", "lesson_id");
 
 CREATE UNIQUE INDEX "favorites_user_id_course_id_key" ON "favorites"("user_id", "course_id");
 
@@ -205,10 +194,6 @@ ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_user_id_fkey" FOREIGN KEY 
 ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "certificates" ADD CONSTRAINT "certificates_enrollment_id_fkey" FOREIGN KEY ("enrollment_id") REFERENCES "enrollments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE "lesson_completions" ADD CONSTRAINT "lesson_completions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE "lesson_completions" ADD CONSTRAINT "lesson_completions_lesson_id_fkey" FOREIGN KEY ("lesson_id") REFERENCES "lessons"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "submissions" ADD CONSTRAINT "submissions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 

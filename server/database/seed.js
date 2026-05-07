@@ -13,7 +13,6 @@ import {
   Certificate,
   Favorite,
   Reminder,
-  LessonCompletion,
   Submission,
 } from '../db/models/index.js';
 import { recalculateProgress } from '../utils/progress.js';
@@ -172,11 +171,6 @@ async function ensureFavorite(userId, courseId) {
   if (!row) await Favorite.create({ userId, courseId });
 }
 
-async function ensureLessonCompletion(userId, lessonId) {
-  const row = await LessonCompletion.findOne({ where: { userId, lessonId } });
-  if (!row) await LessonCompletion.create({ userId, lessonId });
-}
-
 async function ensureReminder(userId, { courseId, title, remindAt }) {
   const row = await Reminder.findOne({
     where: { userId, title, courseId: courseId ?? null },
@@ -229,7 +223,6 @@ async function countApplicationRecords() {
     ['exercises', Exercise],
     ['enrollments', Enrollment],
     ['certificates', Certificate],
-    ['lesson_completions', LessonCompletion],
     ['submissions', Submission],
     ['favorites', Favorite],
     ['reminders', Reminder],
@@ -479,9 +472,6 @@ async function main() {
     remindAt: future,
   });
 
-  await ensureLessonCompletion(student.id, a1L1.id);
-  await ensureLessonCompletion(student.id, a1L2.id);
-
   const exFirst = await Exercise.findByPk('seed-en-a1-l1-ex1');
   if (exFirst) {
     const sub = await Submission.findOne({
@@ -560,22 +550,12 @@ async function main() {
     }
 
     if (def.a1Count >= 5) {
-      await ensureLessonCompletion(u.id, a1L1.id);
-      await ensureLessonCompletion(u.id, a1L2.id);
-      await ensureLessonCompletion(u.id, a1L3.id);
       await ensureCertificate({
         id: `seed-cert-cohort-${def.n}-a1`,
         enrollmentId: enrA1.id,
         documentNumber: `VSVH-2026-COHORT-${def.n}-A1`,
         issuedAt: daysAgo(3),
       });
-    } else if (def.a1Count >= 4) {
-      await ensureLessonCompletion(u.id, a1L1.id);
-      await ensureLessonCompletion(u.id, a1L2.id);
-    } else if (def.a1Count >= 3) {
-      await ensureLessonCompletion(u.id, a1L1.id);
-    } else if (def.a1Count >= 2) {
-      await ensureLessonCompletion(u.id, a1L1.id);
     }
 
     if (def.b1 === 'full' || def.b1 === 'half' || def.b1 === 'quarter') {
@@ -663,7 +643,6 @@ async function main() {
   }
 
   const allBulkExercises = [];
-  const completionPairs = [];
   const submissionRows = [];
   const certificateTargets = [];
   const reminderDate = new Date();
@@ -711,15 +690,6 @@ async function main() {
       remindAt: reminderDate,
     });
 
-    const lessonA = await Lesson.findOne({
-      where: { courseId: bulkCourses[firstCourseIdx].id, sortOrder: 1 },
-    });
-    const lessonB = await Lesson.findOne({
-      where: { courseId: bulkCourses[secondCourseIdx].id, sortOrder: 1 },
-    });
-    if (lessonA) completionPairs.push({ userId: studentUser.id, lessonId: lessonA.id });
-    if (lessonB) completionPairs.push({ userId: studentUser.id, lessonId: lessonB.id });
-
     if (studentIndex < 6) {
       certificateTargets.push({
         userId: studentUser.id,
@@ -737,20 +707,6 @@ async function main() {
         score: 10,
         payload: { answer: 'ok', correct: true, seed: true },
       });
-    }
-  }
-
-  for (const pair of completionPairs) {
-    await ensureLessonCompletion(pair.userId, pair.lessonId);
-  }
-
-  for (const target of certificateTargets) {
-    const lessons = await Lesson.findAll({
-      where: { courseId: target.courseId },
-      attributes: ['id'],
-    });
-    for (const lesson of lessons) {
-      await ensureLessonCompletion(target.userId, lesson.id);
     }
   }
 
