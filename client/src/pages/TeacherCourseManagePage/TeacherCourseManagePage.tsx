@@ -1,19 +1,24 @@
 import { useParams } from 'react-router-dom';
 import { NavigationUp, PageShell, SectionCard } from '../../components/layout';
+import { useI18n } from '../../hooks/useI18n';
 import { CourseContentSection } from './CourseContentSection';
 import { ReportsSection } from './ReportsSection';
 import { StudentsSection } from './StudentsSection';
 import { useTeacherCourseManage } from './useTeacherCourseManage';
 
 export default function TeacherCourseManagePage() {
+  const t = useI18n();
   const { courseId = '' } = useParams();
   const vm = useTeacherCourseManage(courseId);
 
   return (
-    <PageShell title={`Управление: ${vm.course?.title ?? ''}`} description="CRUD контента, аналитика и отчеты преподавателя.">
+    <PageShell
+      title={`${t.teacherManage.pageTitle}: ${vm.course?.title ?? ''}`}
+      description={t.teacherManage.pageDescription}
+    >
       <div className="space-y-4">
-        <NavigationUp links={[{ to: '/teacher/courses', label: 'К списку моих курсов' }]} />
-        <SectionCard title="Уроки и упражнения">
+        <NavigationUp links={[{ to: '/teacher/courses', label: t.teacherManage.backToCourses }]} />
+        <SectionCard title={t.teacherManage.content}>
           <CourseContentSection
             courseForm={vm.courseForm}
             lessonTitle={vm.lessonTitle}
@@ -40,7 +45,7 @@ export default function TeacherCourseManagePage() {
           />
         </SectionCard>
 
-        <SectionCard title="Студенты и CSV">
+        <SectionCard title={t.teacherManage.studentsCsv}>
           <StudentsSection
             students={vm.students}
             statusFilter={vm.statusFilter}
@@ -51,7 +56,7 @@ export default function TeacherCourseManagePage() {
           />
         </SectionCard>
 
-        <SectionCard title="Отчеты и e-mail">
+        <SectionCard title={t.teacherManage.reports}>
           <ReportsSection
             courseId={courseId}
             status={vm.status}

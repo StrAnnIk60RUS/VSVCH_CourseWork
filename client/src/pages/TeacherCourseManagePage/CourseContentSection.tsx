@@ -1,5 +1,7 @@
 import type * as React from 'react';
 import type { ExerciseEditRow, ExerciseForm, LessonEdit, LessonItem } from './useTeacherCourseManage';
+import { COURSE_LANGUAGE_OPTIONS, COURSE_LEVEL_OPTIONS } from '../../constants/courseOptions';
+import { useI18n } from '../../hooks/useI18n';
 
 type Props = {
   courseForm: { title: string; description: string; language: string; level: string };
@@ -32,6 +34,7 @@ type Props = {
 };
 
 export function CourseContentSection(props: Props) {
+  const t = useI18n();
   const {
     courseForm,
     lessonTitle,
@@ -60,7 +63,7 @@ export function CourseContentSection(props: Props) {
   return (
     <>
       <form
-        className="mb-4 grid gap-2 rounded border border-slate-200 p-3 md:grid-cols-2"
+        className="mb-4 grid gap-2 rounded border border-ui-border bg-ui-surface p-3 md:grid-cols-2"
         onSubmit={async (e) => {
           e.preventDefault();
           await onSaveCourse();
@@ -69,67 +72,82 @@ export function CourseContentSection(props: Props) {
         <input
           value={courseForm.title}
           onChange={(e) => setCourseForm((prev) => ({ ...prev, title: e.target.value }))}
-          className="rounded border border-slate-300 px-3 py-2"
-          placeholder="Название курса"
+          className="ui-input rounded px-3 py-2"
+          placeholder={t.teacherContent.courseTitle}
         />
-        <input
+        <select
           value={courseForm.language}
           onChange={(e) => setCourseForm((prev) => ({ ...prev, language: e.target.value }))}
-          className="rounded border border-slate-300 px-3 py-2"
-          placeholder="Язык"
-        />
-        <input
+          className="ui-input rounded px-3 py-2"
+          aria-label={t.teacherContent.language}
+        >
+          {COURSE_LANGUAGE_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <select
           value={courseForm.level}
           onChange={(e) => setCourseForm((prev) => ({ ...prev, level: e.target.value }))}
-          className="rounded border border-slate-300 px-3 py-2"
-          placeholder="Уровень"
-        />
+          className="ui-input rounded px-3 py-2"
+          aria-label={t.teacherContent.level}
+        >
+          {COURSE_LEVEL_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
         <textarea
           value={courseForm.description}
           onChange={(e) => setCourseForm((prev) => ({ ...prev, description: e.target.value }))}
-          className="rounded border border-slate-300 px-3 py-2 md:col-span-2"
-          placeholder="Описание курса"
+          className="ui-input rounded px-3 py-2 md:col-span-2"
+          placeholder={t.teacherContent.courseDescription}
           rows={2}
         />
-        <button type="submit" className="rounded border border-slate-300 px-3 py-2" disabled={busyAction === 'course-update'}>
-          {busyAction === 'course-update' ? 'Сохранение...' : 'Сохранить курс'}
+        <button type="submit" className="ui-btn-primary" disabled={busyAction === 'course-update'}>
+          {busyAction === 'course-update' ? t.teacherContent.savePending : t.teacherContent.saveCourse}
         </button>
       </form>
 
       <form
-        className="mb-3 grid gap-2 rounded border border-slate-200 p-3 md:grid-cols-3"
+        className="mb-3 grid gap-2 rounded border border-ui-border bg-ui-surface p-3 md:grid-cols-3"
         onSubmit={async (e) => {
           e.preventDefault();
           await onCreateLesson();
         }}
       >
-        <input value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} className="rounded border border-slate-300 px-3 py-2" placeholder="Название урока" />
+        <input value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} className="ui-input rounded px-3 py-2" placeholder={t.teacherContent.lessonTitle} />
         <input
           value={lessonContent}
           onChange={(e) => setLessonContent(e.target.value)}
-          className="rounded border border-slate-300 px-3 py-2"
-          placeholder="Описание/контент урока (опционально)"
+          className="ui-input rounded px-3 py-2"
+          placeholder={t.teacherContent.lessonContentOptional}
         />
-        <button type="submit" className="rounded border border-slate-300 px-3 py-2" disabled={busyAction === 'lesson-create'}>
-          {busyAction === 'lesson-create' ? 'Создание...' : 'Добавить урок'}
+        <button type="submit" className="ui-btn-primary" disabled={busyAction === 'lesson-create'}>
+          {busyAction === 'lesson-create' ? t.teacherContent.createPending : t.teacherContent.addLesson}
         </button>
       </form>
 
       <ul className="space-y-2">
         {lessons.map((lesson) => (
-          <li key={lesson.id} className="rounded border border-slate-200 p-3">
-            <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-2">
-              <span className="font-medium text-slate-600">Урок</span>
+          <li
+            key={lesson.id}
+            className="ui-card-interactive rounded border border-ui-border bg-ui-surface p-3"
+          >
+            <div className="flex items-center justify-between gap-2 border-b border-ui-border pb-2">
+              <span className="font-medium text-ui-muted">{t.teacherContent.lesson}</span>
               <button
                 type="button"
                 onClick={() => onDeleteLesson(lesson)}
-                className="rounded border border-slate-300 px-2 py-1"
+                className="ui-btn-danger text-sm"
                 disabled={busyAction === `lesson-delete-${lesson.id}`}
               >
-                {busyAction === `lesson-delete-${lesson.id}` ? 'Удаление...' : 'Удалить урок'}
+                {busyAction === `lesson-delete-${lesson.id}` ? t.teacherContent.deletePending : t.teacherContent.deleteLesson}
               </button>
             </div>
-            <div className="mt-2 grid gap-2 rounded border border-slate-100 p-2 md:grid-cols-2">
+            <div className="mt-2 grid gap-2 rounded border border-ui-border bg-ui-subtle p-2 md:grid-cols-2">
               <input
                 value={lessonEdits[lesson.id]?.title ?? lesson.title}
                 onChange={(e) =>
@@ -141,16 +159,16 @@ export function CourseContentSection(props: Props) {
                     },
                   }))
                 }
-                className="rounded border border-slate-300 px-2 py-1 text-sm"
-                placeholder="Название урока"
+                className="ui-input rounded px-2 py-1 text-sm"
+                placeholder={t.teacherContent.lessonTitle}
               />
               <button
                 type="button"
                 onClick={() => onSaveLesson(lesson)}
-                className="rounded border border-slate-300 px-2 py-1 text-sm"
+                className="ui-btn-primary text-sm"
                 disabled={busyAction === `lesson-update-${lesson.id}`}
               >
-                {busyAction === `lesson-update-${lesson.id}` ? 'Сохранение...' : 'Сохранить урок'}
+                {busyAction === `lesson-update-${lesson.id}` ? t.teacherContent.savePending : t.teacherContent.saveLesson}
               </button>
               <textarea
                 value={lessonEdits[lesson.id]?.content ?? lesson.content ?? ''}
@@ -163,8 +181,8 @@ export function CourseContentSection(props: Props) {
                     },
                   }))
                 }
-                className="rounded border border-slate-300 px-2 py-1 text-sm md:col-span-2"
-                placeholder="Контент урока"
+                className="ui-input rounded px-2 py-1 text-sm md:col-span-2"
+                placeholder={t.teacherContent.lessonContent}
                 rows={2}
               />
             </div>
@@ -177,7 +195,10 @@ export function CourseContentSection(props: Props) {
                   maxScore: String(exercise.maxScore ?? 10),
                 };
                 return (
-                  <div key={exercise.id} className="space-y-2 rounded border border-slate-200 p-2 text-sm">
+                  <div
+                    key={exercise.id}
+                    className="ui-card-interactive space-y-2 rounded border border-ui-border bg-ui-surface p-2 text-sm"
+                  >
                     <div className="grid gap-2 md:grid-cols-2">
                       <input
                         value={row.title}
@@ -187,8 +208,8 @@ export function CourseContentSection(props: Props) {
                             [exercise.id]: { ...row, title: e.target.value },
                           }))
                         }
-                        className="rounded border border-slate-300 px-2 py-1"
-                        placeholder="Название"
+                        className="ui-input rounded px-2 py-1"
+                        placeholder={t.teacherContent.exerciseTitle}
                       />
                       <input
                         value={row.maxScore}
@@ -198,8 +219,8 @@ export function CourseContentSection(props: Props) {
                             [exercise.id]: { ...row, maxScore: e.target.value },
                           }))
                         }
-                        className="rounded border border-slate-300 px-2 py-1"
-                        placeholder="Баллы"
+                        className="ui-input rounded px-2 py-1"
+                        placeholder={t.teacherContent.points}
                       />
                       <input
                         value={row.question}
@@ -209,8 +230,8 @@ export function CourseContentSection(props: Props) {
                             [exercise.id]: { ...row, question: e.target.value },
                           }))
                         }
-                        className="rounded border border-slate-300 px-2 py-1 md:col-span-2"
-                        placeholder="Вопрос"
+                        className="ui-input rounded px-2 py-1 md:col-span-2"
+                        placeholder={t.teacherContent.question}
                       />
                       <input
                         value={row.correctAnswer}
@@ -220,33 +241,33 @@ export function CourseContentSection(props: Props) {
                             [exercise.id]: { ...row, correctAnswer: e.target.value },
                           }))
                         }
-                        className="rounded border border-slate-300 px-2 py-1 md:col-span-2"
-                        placeholder="Правильный ответ"
+                        className="ui-input rounded px-2 py-1 md:col-span-2"
+                        placeholder={t.teacherContent.correctAnswer}
                       />
                     </div>
                     <div className="flex flex-wrap justify-end gap-2">
                       <button
                         type="button"
                         onClick={() => onSaveExercise(lesson, exercise.id)}
-                        className="rounded border border-slate-300 px-2 py-1"
+                        className="ui-btn-primary text-sm"
                         disabled={busyAction === `exercise-update-${exercise.id}`}
                       >
-                        {busyAction === `exercise-update-${exercise.id}` ? 'Сохранение...' : 'Сохранить'}
+                        {busyAction === `exercise-update-${exercise.id}` ? t.teacherContent.savePending : t.teacherContent.save}
                       </button>
                       <button
                         type="button"
                         onClick={() => onDeleteExercise(lesson, exercise)}
-                        className="rounded border border-slate-300 px-2 py-1"
+                        className="ui-btn-danger text-sm"
                         disabled={busyAction === `exercise-delete-${exercise.id}`}
                       >
-                        {busyAction === `exercise-delete-${exercise.id}` ? 'Удаление...' : 'Удалить'}
+                        {busyAction === `exercise-delete-${exercise.id}` ? t.teacherContent.deletePending : t.teacherContent.delete}
                       </button>
                     </div>
                   </div>
                 );
               })}
               <form
-                className="grid gap-2 rounded border border-slate-200 p-2 md:grid-cols-2"
+                className="grid gap-2 rounded border border-ui-border bg-ui-surface p-2 md:grid-cols-2"
                 onSubmit={async (e) => {
                   e.preventDefault();
                   await onCreateExercise(lesson);
@@ -260,8 +281,8 @@ export function CourseContentSection(props: Props) {
                       [lesson.id]: { ...(prev[lesson.id] ?? { title: '', question: '', correctAnswer: '', maxScore: '10' }), title: e.target.value },
                     }))
                   }
-                  className="rounded border border-slate-300 px-2 py-1"
-                  placeholder="Название упражнения"
+                  className="ui-input rounded px-2 py-1"
+                  placeholder={t.teacherContent.addExerciseTitle}
                 />
                 <input
                   value={exerciseForms[lesson.id]?.maxScore ?? '10'}
@@ -271,8 +292,8 @@ export function CourseContentSection(props: Props) {
                       [lesson.id]: { ...(prev[lesson.id] ?? { title: '', question: '', correctAnswer: '', maxScore: '10' }), maxScore: e.target.value },
                     }))
                   }
-                  className="rounded border border-slate-300 px-2 py-1"
-                  placeholder="Баллы (maxScore)"
+                  className="ui-input rounded px-2 py-1"
+                  placeholder={t.teacherContent.addPoints}
                 />
                 <input
                   value={exerciseForms[lesson.id]?.question ?? ''}
@@ -282,8 +303,8 @@ export function CourseContentSection(props: Props) {
                       [lesson.id]: { ...(prev[lesson.id] ?? { title: '', question: '', correctAnswer: '', maxScore: '10' }), question: e.target.value },
                     }))
                   }
-                  className="rounded border border-slate-300 px-2 py-1"
-                  placeholder="Вопрос"
+                  className="ui-input rounded px-2 py-1"
+                  placeholder={t.teacherContent.question}
                 />
                 <input
                   value={exerciseForms[lesson.id]?.correctAnswer ?? ''}
@@ -296,15 +317,15 @@ export function CourseContentSection(props: Props) {
                       },
                     }))
                   }
-                  className="rounded border border-slate-300 px-2 py-1"
-                  placeholder="Правильный ответ"
+                  className="ui-input rounded px-2 py-1"
+                  placeholder={t.teacherContent.correctAnswer}
                 />
                 <button
                   type="submit"
-                  className="rounded border border-slate-300 px-2 py-1 md:col-span-2"
+                  className="ui-btn-primary text-sm md:col-span-2"
                   disabled={busyAction === `exercise-create-${lesson.id}`}
                 >
-                  {busyAction === `exercise-create-${lesson.id}` ? 'Добавление...' : 'Добавить упражнение в урок'}
+                  {busyAction === `exercise-create-${lesson.id}` ? t.teacherContent.addPending : t.teacherContent.addExercise}
                 </button>
               </form>
             </div>

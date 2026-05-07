@@ -15,6 +15,7 @@ import {
   updateExercise,
   updateLesson,
 } from '../../api';
+import { useAuthSession } from '../../hooks/useAuthSession';
 
 export type CourseForm = { title: string; description: string; language: string; level: string };
 export type ExerciseForm = { title: string; question: string; correctAnswer: string; maxScore: string };
@@ -24,6 +25,8 @@ export type ExerciseEditRow = { title: string; question: string; correctAnswer: 
 export type StudentItem = { userId: string; name: string; email: string; progress: number; active: boolean };
 
 export function useTeacherCourseManage(courseId: string) {
+  const { user } = useAuthSession();
+  const userEmail = user?.email ?? '';
   const [course, setCourse] = useState<CourseForm & { lessons: LessonItem[] } | null>(null);
   const [exerciseMap, setExerciseMap] = useState<
     Record<string, Array<{ id: string; title: string; question?: string; maxScore?: number; correctAnswer?: string }>>
@@ -276,15 +279,25 @@ export function useTeacherCourseManage(courseId: string) {
         saveBlob(await downloadReport('course-summary', format, courseId), `course-${courseId}.${format}`);
       },
       async sendCourseReportEmail() {
-        const email = prompt('Email для отправки отчета');
-        if (!email) {
+        if (!userEmail) {
           return;
         }
-        const res = await sendReportEmail({ email, type: 'course-summary', format: 'pdf', courseId });
+        const res = await sendReportEmail({ email: userEmail, type: 'course-summary', format: 'pdf', courseId });
         setStatus(res.message ?? (res.sent ? 'Письмо отправлено' : 'Demo-режим'));
       },
     }),
-    [courseForm, courseId, exerciseEdits, exerciseForms, lessonContent, lessonEdits, lessonTitle, reloadCourse, saveBlob],
+    [
+      courseForm,
+      courseId,
+      exerciseEdits,
+      exerciseForms,
+      lessonContent,
+      lessonEdits,
+      lessonTitle,
+      reloadCourse,
+      saveBlob,
+      userEmail,
+    ],
   );
 
   return {
