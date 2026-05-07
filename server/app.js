@@ -5,6 +5,7 @@ import coursesRoutes from './routes/courses.js';
 import lessonsRoutes from './routes/lessons.js';
 import exercisesRoutes from './routes/exercises.js';
 import enrollmentsRoutes from './routes/enrollments.js';
+import certificatesRoutes from './routes/certificates.js';
 import submissionsRoutes from './routes/submissions.js';
 import favoritesRoutes from './routes/favorites.js';
 import remindersRoutes from './routes/reminders.js';
@@ -29,6 +30,7 @@ export function createApp() {
   app.use('/api/courses/:courseId/lessons', lessonsRoutes);
   app.use('/api/courses/:courseId/lessons/:lessonId/exercises', exercisesRoutes);
   app.use('/api/enrollments', enrollmentsRoutes);
+  app.use('/api/certificates', certificatesRoutes);
   app.use('/api/submissions', submissionsRoutes);
   app.use('/api/favorites', favoritesRoutes);
   app.use('/api/reminders', remindersRoutes);

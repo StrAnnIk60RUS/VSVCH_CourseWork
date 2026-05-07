@@ -42,6 +42,23 @@ function mapLesson(lesson) {
   };
 }
 
+router.get('/:lessonId', async (req, res, next) => {
+  try {
+    const { courseId, lessonId } = req.params;
+    const course = await Course.findByPk(courseId);
+    if (!course) {
+      return res.status(404).json({ error: 'Курс не найден' });
+    }
+    const lesson = await Lesson.findOne({ where: { id: lessonId, courseId } });
+    if (!lesson) {
+      return res.status(404).json({ error: 'Урок не найден' });
+    }
+    return res.status(200).json(mapLesson(lesson));
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/', async (req, res, next) => {
   try {
     const { courseId } = req.params;

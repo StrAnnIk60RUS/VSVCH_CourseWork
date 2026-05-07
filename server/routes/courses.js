@@ -8,10 +8,14 @@ import {
   User,
   Lesson,
   Exercise,
+  Enrollment,
+  Submission,
   sequelize,
 } from '../db/models/index.js';
 import { requireAuth } from '../middleware/auth.js';
 import { canManageCourse, hasRole } from '../utils/permissions.js';
+import { verifyAccessToken } from '../utils/jwt.js';
+import { getAuthUserDtoById } from '../utils/authUser.js';
 
 const router = Router();
 
@@ -40,6 +44,16 @@ const updateCourseSchema = z
       data.published !== undefined,
     { message: 'At least one field is required' },
   );
+
+const reviewUpsertSchema = z
+  .object({
+    rating: z.coerce.number().int().min(1).max(5),
+    comment: z.string().trim().max(1000).optional(),
+  })
+  .transform((data) => ({
+    ...data,
+    comment: data.comment && data.comment.length > 0 ? data.comment : null,
+  }));
 
 const listQuerySchema = z
   .object({
@@ -170,6 +184,53 @@ function mapCourseEntity(course) {
   };
 }
 
+function clampProgress(value) {
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
+
+function maxScoreForExercise(payload) {
+  const score = Number(payload?.maxScore ?? 10);
+  return Number.isFinite(score) && score > 0 ? score : 10;
+}
+
+async function resolveOptionalAuthUser(req) {
+  const header = req.headers.authorization;
+  if (!header || !header.startsWith('Bearer ')) {
+    return null;
+  }
+  const token = header.slice(7).trim();
+  if (!token) {
+    return null;
+  }
+  try {
+    const { sub } = verifyAccessToken(token);
+    return await getAuthUserDtoById(sub);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * @param {string} courseId
+ * @param {import('sequelize').Transaction | undefined} transaction
+ */
+async function recalculateCourseRatingAverage(courseId, transaction) {
+  const stats = await CourseReview.findOne({
+    attributes: [[fn('AVG', col('rating')), 'ratingAverage']],
+    where: { courseId },
+    raw: true,
+    transaction,
+  });
+  const avgRaw = stats?.ratingAverage;
+  const ratingAverage =
+    avgRaw == null ? null : Number(Number(avgRaw).toFixed(3));
+  await Course.update(
+    { ratingAverage },
+    { where: { id: courseId }, transaction },
+  );
+  return ratingAverage;
+}
+
 router.get('/', async (req, res, next) => {
   try {
     const parsed = listQuerySchema.safeParse(normalizeQuery(req.query));
@@ -238,7 +299,7 @@ router.get('/:courseId', async (req, res, next) => {
       return res.status(404).json({ error: 'Курс не найден' });
     }
 
-    const [staffRows, lessons, reviewCount] = await Promise.all([
+    const [staffRows, lessons, reviewCount, authUser] = await Promise.all([
       CourseStaff.findAll({
         where: { courseId },
         include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email'] }],
@@ -250,20 +311,77 @@ router.get('/:courseId', async (req, res, next) => {
         attributes: ['id', 'title', 'sortOrder', 'content'],
       }),
       CourseReview.count({ where: { courseId } }),
+      resolveOptionalAuthUser(req),
     ]);
 
     const lessonIds = lessons.map((l) => l.id);
     /** @type {Record<string, number>} */
     const exerciseByLesson = {};
+    /** @type {Record<string, number>} */
+    const lessonProgressByLessonId = {};
     if (lessonIds.length > 0) {
-      const agg = await Exercise.findAll({
-        attributes: ['lessonId', [fn('COUNT', col('Exercise.id')), 'exerciseCount']],
+      const exerciseRows = await Exercise.findAll({
+        attributes: ['id', 'lessonId', 'payload'],
         where: { lessonId: { [Op.in]: lessonIds } },
-        group: ['lessonId'],
-        raw: true,
       });
-      for (const row of agg) {
-        exerciseByLesson[row.lessonId] = Number(row.exerciseCount) || 0;
+
+      /** @type {Record<string, Array<{ id: string, maxScore: number }>>} */
+      const exercisesByLesson = {};
+      for (const row of exerciseRows) {
+        const plain = row.get({ plain: true });
+        const lessonKey = plain.lessonId;
+        if (!exercisesByLesson[lessonKey]) {
+          exercisesByLesson[lessonKey] = [];
+        }
+        exercisesByLesson[lessonKey].push({
+          id: plain.id,
+          maxScore: maxScoreForExercise(plain.payload),
+        });
+      }
+
+      for (const lessonId of lessonIds) {
+        exerciseByLesson[lessonId] = exercisesByLesson[lessonId]?.length ?? 0;
+        lessonProgressByLessonId[lessonId] = 0;
+      }
+
+      const isStudent = Boolean(authUser?.roles?.includes('STUDENT'));
+      if (isStudent && authUser) {
+        const enrollment = await Enrollment.findOne({
+          where: { userId: authUser.id, courseId },
+          attributes: ['id'],
+        });
+        if (enrollment) {
+          const exerciseIds = exerciseRows.map((row) => row.id);
+          const bestByExercise = new Map();
+          if (exerciseIds.length > 0) {
+            const submissions = await Submission.findAll({
+              where: { userId: authUser.id, exerciseId: { [Op.in]: exerciseIds } },
+              attributes: ['exerciseId', 'score'],
+            });
+            for (const sub of submissions) {
+              const exerciseId = sub.exerciseId;
+              const score = Number(sub.score) || 0;
+              const prev = bestByExercise.get(exerciseId) ?? 0;
+              if (score > prev) {
+                bestByExercise.set(exerciseId, score);
+              }
+            }
+          }
+
+          for (const lessonId of lessonIds) {
+            const lessonExercises = exercisesByLesson[lessonId] ?? [];
+            const maxTotal = lessonExercises.reduce((sum, ex) => sum + ex.maxScore, 0);
+            if (maxTotal <= 0) {
+              lessonProgressByLessonId[lessonId] = 0;
+              continue;
+            }
+            const earnedTotal = lessonExercises.reduce(
+              (sum, ex) => sum + (bestByExercise.get(ex.id) ?? 0),
+              0,
+            );
+            lessonProgressByLessonId[lessonId] = clampProgress((earnedTotal / maxTotal) * 100);
+          }
+        }
       }
     }
 
@@ -295,6 +413,7 @@ router.get('/:courseId', async (req, res, next) => {
         order: p.sortOrder,
         content: p.content,
         exerciseCount: exerciseByLesson[p.id] ?? 0,
+        progressPercent: lessonProgressByLessonId[p.id] ?? 0,
       };
     });
 
@@ -316,6 +435,129 @@ router.get('/:courseId', async (req, res, next) => {
       reviewCount,
       lessons: lessonsOut,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/:courseId/reviews', async (req, res, next) => {
+  try {
+    const { courseId } = req.params;
+    const course = await Course.findOne({
+      where: { id: courseId, published: true },
+      attributes: ['id'],
+    });
+    if (!course) {
+      return res.status(404).json({ error: 'Курс не найден' });
+    }
+    const rows = await CourseReview.findAll({
+      where: { courseId },
+      include: [{ model: User, as: 'user', attributes: ['id', 'name'] }],
+      order: [[col('CourseReview.created_at'), 'DESC']],
+    });
+    const items = rows.map((row) => {
+      const plain = row.get({ plain: true });
+      const author = plain.user ? { id: plain.user.id, name: plain.user.name } : null;
+      const createdAt = row.createdAt ?? plain.createdAt ?? plain.created_at ?? null;
+      const updatedAt = row.updatedAt ?? plain.updatedAt ?? plain.updated_at ?? null;
+      return {
+        rating: plain.rating,
+        comment: plain.comment,
+        createdAt,
+        updatedAt,
+        author,
+      };
+    });
+    return res.status(200).json({ items });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/:courseId/review/me', requireAuth, async (req, res, next) => {
+  try {
+    if (!hasRole(req, 'STUDENT')) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const { courseId } = req.params;
+    const review = await CourseReview.findOne({
+      where: { courseId, userId: req.authUser.id },
+    });
+    if (!review) {
+      return res.status(200).json({ myReview: null });
+    }
+    const plain = review.get({ plain: true });
+    return res.status(200).json({
+      myReview: {
+        rating: plain.rating,
+        comment: plain.comment,
+        createdAt: plain.createdAt,
+        updatedAt: plain.updatedAt,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:courseId/review', requireAuth, async (req, res, next) => {
+  try {
+    if (!hasRole(req, 'STUDENT')) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+    const { courseId } = req.params;
+    const parsed = reviewUpsertSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return res.status(400).json(validationError('Некорректные данные отзыва', parsed));
+    }
+
+    const [course, enrollment] = await Promise.all([
+      Course.findOne({ where: { id: courseId, published: true } }),
+      Enrollment.findOne({ where: { userId: req.authUser.id, courseId } }),
+    ]);
+    if (!course) {
+      return res.status(404).json({ error: 'Курс не найден' });
+    }
+    if (!enrollment) {
+      return res.status(403).json({ error: 'Сначала запишитесь на курс' });
+    }
+
+    const result = await sequelize.transaction(async (tx) => {
+      const existing = await CourseReview.findOne({
+        where: { userId: req.authUser.id, courseId },
+        transaction: tx,
+      });
+      let review;
+      if (existing) {
+        review = await existing.update(parsed.data, { transaction: tx });
+      } else {
+        review = await CourseReview.create(
+          {
+            userId: req.authUser.id,
+            courseId,
+            ...parsed.data,
+          },
+          { transaction: tx },
+        );
+      }
+      const [ratingAverage, reviewCount] = await Promise.all([
+        recalculateCourseRatingAverage(courseId, tx),
+        CourseReview.count({ where: { courseId }, transaction: tx }),
+      ]);
+      const reviewPlain = review.get({ plain: true });
+      return {
+        ratingAverage,
+        reviewCount,
+        myReview: {
+          rating: reviewPlain.rating,
+          comment: reviewPlain.comment,
+          createdAt: reviewPlain.createdAt,
+          updatedAt: reviewPlain.updatedAt,
+        },
+      };
+    });
+
+    return res.status(200).json(result);
   } catch (err) {
     next(err);
   }

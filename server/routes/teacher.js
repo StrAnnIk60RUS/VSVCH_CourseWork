@@ -2,6 +2,7 @@
 import {
   Course,
   CourseStaff,
+  CourseReview,
   Enrollment,
   Lesson,
   User,
@@ -27,6 +28,17 @@ function toStudentRow(enrollment, lastActivity) {
   };
 }
 
+function safeIsoDate(value, fallback = '') {
+  if (value == null) {
+    return fallback;
+  }
+  const ts = new Date(value).getTime();
+  if (Number.isNaN(ts)) {
+    return fallback;
+  }
+  return new Date(ts).toISOString();
+}
+
 router.get('/courses', requireAuth, async (req, res, next) => {
   try {
     if (!hasRole(req, 'TEACHER')) {
@@ -38,14 +50,22 @@ router.get('/courses', requireAuth, async (req, res, next) => {
       order: [[{ model: Course, as: 'course' }, 'created_at', 'DESC']],
     });
     const courseIds = staffRows.map((row) => row.course.id);
-    const [lessonCounts, enrollmentCounts] = await Promise.all([
-      Lesson.count({ where: { courseId: courseIds }, group: ['course_id'] }),
-      Enrollment.count({ where: { courseId: courseIds }, group: ['course_id'] }),
-    ]);
-    const lessonCountMap = Object.fromEntries(lessonCounts.map((item) => [item.courseId, Number(item.count)]));
-    const enrollmentCountMap = Object.fromEntries(
-      enrollmentCounts.map((item) => [item.courseId, Number(item.count)]),
-    );
+    const [lessonCounts, enrollmentCounts, reviewCounts] = courseIds.length
+      ? await Promise.all([
+          Lesson.count({ where: { courseId: courseIds }, group: ['course_id'] }),
+          Enrollment.count({ where: { courseId: courseIds }, group: ['course_id'] }),
+          CourseReview.count({ where: { courseId: courseIds }, group: ['course_id'] }),
+        ])
+      : [[], [], []];
+    const toCountMap = (rows) =>
+      Object.fromEntries(
+        rows
+          .map((item) => [item.courseId ?? item.course_id, Number(item.count)])
+          .filter(([courseId]) => Boolean(courseId)),
+      );
+    const lessonCountMap = toCountMap(lessonCounts);
+    const enrollmentCountMap = toCountMap(enrollmentCounts);
+    const reviewCountMap = toCountMap(reviewCounts);
     const items = staffRows.map((row) => {
       const course = row.course;
       return {
@@ -54,9 +74,11 @@ router.get('/courses', requireAuth, async (req, res, next) => {
         language: course.language,
         level: course.level,
         published: course.published,
+        ratingAverage: course.ratingAverage != null ? Number(course.ratingAverage) : null,
         createdAt: course.createdAt,
         lessonCount: lessonCountMap[course.id] ?? 0,
         enrollmentCount: enrollmentCountMap[course.id] ?? 0,
+        reviewCount: reviewCountMap[course.id] ?? 0,
       };
     });
     return res.status(200).json({ items });
@@ -127,12 +149,16 @@ router.get('/courses/:courseId/students.csv', requireAuth, async (req, res, next
     const escapeCsv = (value) => `"${String(value).replace(/"/g, '""')}"`;
     const lines = ['name,email,progress,enrolledAt'];
     for (const row of enrollments) {
+      const enrolledAt = safeIsoDate(
+        row.createdAt ?? row.enrolledAt ?? row.get?.('created_at'),
+        '',
+      );
       lines.push(
         [
-          escapeCsv(row.user.name),
-          escapeCsv(row.user.email),
+          escapeCsv(row.user?.name ?? ''),
+          escapeCsv(row.user?.email ?? ''),
           row.progress,
-          escapeCsv(new Date(row.createdAt).toISOString()),
+          escapeCsv(enrolledAt),
         ].join(','),
       );
     }

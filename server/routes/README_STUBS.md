@@ -9,7 +9,8 @@ The route modules below are also implemented and no longer stubs:
 - `users.js`: `GET /api/users`, `PUT /api/users`
 - `lessons.js`: `GET/POST /api/courses/:courseId/lessons`, `PUT/DELETE /api/courses/:courseId/lessons/:lessonId`
 - `exercises.js`: `GET/POST /api/courses/:courseId/lessons/:lessonId/exercises`, `PUT/DELETE /api/courses/:courseId/lessons/:lessonId/exercises/:exerciseId`
-- `enrollments.js`: `POST /api/enrollments`, `GET /api/enrollments`, `DELETE /api/enrollments/:courseId`, `POST /api/enrollments/complete-lesson/:courseId/:lessonId`
+- `enrollments.js`: `POST /api/enrollments`, `GET /api/enrollments` (включает выданный сертификат, если есть), `DELETE /api/enrollments/:courseId`
+- `certificates.js`: `POST /api/certificates` (выдача при `progress === 100`, идемпотентная), `GET /api/certificates/my`, `GET /api/certificates/:id/pdf` (PDF через общий `server/utils/pdf.js`)
 - `submissions.js`: `POST /api/submissions`, `GET /api/submissions`
 - `favorites.js`: `GET/POST /api/favorites`, `DELETE /api/favorites/:courseId`
 - `reminders.js`: `GET/POST /api/reminders`, `PUT/DELETE /api/reminders/:id`

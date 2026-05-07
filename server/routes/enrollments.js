@@ -1,10 +1,9 @@
 ﻿import { Router } from 'express';
 import { col } from 'sequelize';
 import { z } from 'zod';
-import { Course, Enrollment, Lesson, LessonCompletion } from '../db/models/index.js';
+import { Certificate, Course, Enrollment } from '../db/models/index.js';
 import { requireAuth } from '../middleware/auth.js';
 import { hasRole } from '../utils/permissions.js';
-import { recalculateProgress } from '../utils/progress.js';
 import { getLeadTeachersByCourseIds } from '../services/courseStaffService.js';
 
 const router = Router();
@@ -49,7 +48,10 @@ router.get('/', requireAuth, async (req, res, next) => {
   try {
     const rows = await Enrollment.findAll({
       where: { userId: req.authUser.id },
-      include: [{ model: Course, as: 'course' }],
+      include: [
+        { model: Course, as: 'course' },
+        { model: Certificate, as: 'certificate' },
+      ],
       order: [[col('Enrollment.created_at'), 'DESC']],
     });
     const plainRows = rows.map((row) => row.get({ plain: true }));
@@ -61,6 +63,13 @@ router.get('/', requireAuth, async (req, res, next) => {
       enrolledAt: plain.createdAt,
       course: plain.course,
       leadTeacher: leadByCourseId[plain.courseId]?.get({ plain: true }) ?? null,
+      certificate: plain.certificate
+        ? {
+            id: plain.certificate.id,
+            documentNumber: plain.certificate.documentNumber,
+            issuedAt: plain.certificate.issuedAt,
+          }
+        : null,
     }));
     return res.status(200).json({ items });
   } catch (err) {
@@ -79,28 +88,6 @@ router.delete('/:courseId', requireAuth, async (req, res, next) => {
       return res.status(404).json({ error: 'Запись на курс не найдена' });
     }
     return res.status(204).send();
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.post('/complete-lesson/:courseId/:lessonId', requireAuth, async (req, res, next) => {
-  try {
-    const { courseId, lessonId } = req.params;
-    const enrollment = await Enrollment.findOne({ where: { userId: req.authUser.id, courseId } });
-    if (!enrollment) {
-      return res.status(403).json({ error: 'Сначала запишитесь на курс' });
-    }
-    const lesson = await Lesson.findOne({ where: { id: lessonId, courseId } });
-    if (!lesson) {
-      return res.status(404).json({ error: 'Урок не найден' });
-    }
-    await LessonCompletion.findOrCreate({
-      where: { userId: req.authUser.id, lessonId },
-      defaults: { userId: req.authUser.id, lessonId },
-    });
-    const progress = await recalculateProgress(req.authUser.id, courseId);
-    return res.status(200).json({ ok: true, progress });
   } catch (err) {
     next(err);
   }
