@@ -1,3 +1,4 @@
+export { AppFooter } from './AppFooter';
 export { NavigationUp } from './NavigationUp';
 export type { UpNavLink } from './NavigationUp';
 export { PageShell } from './PageShell';

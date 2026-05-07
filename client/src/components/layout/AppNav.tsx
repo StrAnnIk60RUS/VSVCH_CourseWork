@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { STORAGE_KEYS } from '../../constants/storage';
+import { STORAGE_KEYS, clearUiStorage } from '../../constants/storage';
+import { useAuthSession } from '../../hooks/useAuthSession';
 import { useI18n } from '../../hooks/useI18n';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { clearSession, setTheme, setUiLanguage } from '../../store/slices/appSlice';
@@ -10,35 +11,53 @@ export function AppNav() {
   const dispatch = useAppDispatch();
   const location = useLocation();
   const t = useI18n();
-  const user = useAppSelector((s) => s.app.user);
+  const { user, setAuthenticatedUser } = useAuthSession();
   const theme = useAppSelector((s) => s.app.theme);
   const uiLanguage = useAppSelector((s) => s.app.uiLanguage);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef<HTMLDivElement | null>(null);
+  const isStudent = Boolean(user?.roles.includes('STUDENT'));
+  const isTeacher = Boolean(user?.roles.includes('TEACHER'));
 
-  const mainLinks = useMemo(
+  const desktopMainLinks = useMemo(
     () =>
       [
         { to: '/', label: t.nav.home, visible: true },
-        { to: '/courses', label: t.nav.courses, visible: true },
-        {
-          to: '/me/learning',
-          label: t.nav.myLearning,
-          visible: Boolean(user?.roles.includes('STUDENT')),
-        },
-        {
-          to: '/me/progress',
-          label: t.nav.progress,
-          visible: Boolean(user?.roles.includes('STUDENT')),
-        },
-        { to: '/me/reminders', label: t.nav.reminders, visible: Boolean(user) },
-        { to: '/teacher/courses', label: t.nav.teacher, visible: Boolean(user?.roles.includes('TEACHER')) },
+        { to: isTeacher ? '/teacher/courses' : '/courses', label: t.nav.courses, visible: true },
+        { to: '/me/reminders', label: t.nav.reminders, visible: Boolean(user) && !isStudent },
+        { to: '/teacher/analytics', label: t.nav.analytics, visible: isTeacher },
       ].filter((link) => link.visible),
-    [t, user],
+    [isStudent, isTeacher, t, user],
   );
 
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [location.pathname]);
+  const learningLinks = useMemo(
+    () =>
+      [
+        { to: '/me/learning', label: t.nav.currentCourses, visible: isStudent },
+        { to: '/me/favorites', label: t.nav.favorites, visible: isStudent },
+        { to: '/me/progress', label: t.nav.progress, visible: isStudent },
+        { to: '/me/reminders', label: t.nav.reminders, visible: isStudent },
+      ].filter((link) => link.visible),
+    [isStudent, t],
+  );
+
+  const mobileMainLinks = useMemo(
+    () =>
+      [
+        ...desktopMainLinks,
+        ...learningLinks,
+      ].filter((link, index, arr) => arr.findIndex((item) => item.to === link.to) === index),
+    [desktopMainLinks, learningLinks],
+  );
+
+  const isLinkActive = (to: string) => {
+    if (to === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname === to || location.pathname.startsWith(`${to}/`);
+  };
+  const isLearningSectionActive = learningLinks.some((link) => isLinkActive(link.to));
 
   useEffect(() => {
     if (!mobileMenuOpen) {
@@ -58,8 +77,31 @@ export function AppNav() {
     };
   }, [mobileMenuOpen]);
 
+  useEffect(() => {
+    if (!settingsOpen) {
+      return;
+    }
+    const onPointerDown = (event: MouseEvent) => {
+      if (!settingsRef.current?.contains(event.target as Node)) {
+        setSettingsOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSettingsOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', onPointerDown);
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('mousedown', onPointerDown);
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [settingsOpen]);
+
   const logout = () => {
     clearSessionStorage();
+    setAuthenticatedUser(null);
     dispatch(clearSession());
     setMobileMenuOpen(false);
   };
@@ -69,6 +111,15 @@ export function AppNav() {
     dispatch(setTheme(nextTheme));
     localStorage.setItem(STORAGE_KEYS.theme, nextTheme);
     document.documentElement.dataset.theme = nextTheme;
+  };
+
+  const resetUiSettings = () => {
+    clearUiStorage();
+    dispatch(setTheme('light'));
+    dispatch(setUiLanguage('ru'));
+    document.documentElement.dataset.theme = 'light';
+    document.documentElement.lang = 'ru';
+    setSettingsOpen(false);
   };
 
   const toggleLanguage = () => {
@@ -84,48 +135,124 @@ export function AppNav() {
         <div className="flex items-center gap-4">
           <span className="text-sm font-semibold text-ui-text">{t.common.appName}</span>
           <div className="hidden items-center gap-3 text-sm md:flex">
-            {mainLinks.map((link) => (
-              <Link key={link.to} to={link.to} className="text-ui-muted transition hover:text-ui-link-hover">
+            {desktopMainLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`ui-link-anim ${
+                  isLinkActive(link.to) ? 'is-active text-ui-link font-semibold' : 'text-ui-muted'
+                }`}
+                aria-current={isLinkActive(link.to) ? 'page' : undefined}
+              >
                 {link.label}
               </Link>
             ))}
+            {learningLinks.length > 0 && (
+              <div className="group relative">
+                <span
+                  className={`ui-link-anim inline-flex cursor-pointer items-center gap-1 ${
+                    isLearningSectionActive ? 'is-active text-ui-link font-semibold' : 'text-ui-muted'
+                  }`}
+                  tabIndex={0}
+                >
+                  {t.nav.myLearning}
+                  <span
+                    className="text-xs transition-transform duration-150 group-hover:rotate-180 group-focus-within:rotate-180"
+                    aria-hidden="true"
+                  >
+                    v
+                  </span>
+                </span>
+                <div className="pointer-events-none invisible absolute left-0 top-full z-30 w-64 pt-2 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
+                  <div className="rounded border border-ui-border bg-ui-surface p-2 shadow-lg">
+                    {learningLinks.map((link) => (
+                      <Link
+                        key={link.to}
+                        to={link.to}
+                        className={`ui-menu-action mt-1 block first:mt-0 ${
+                          isLinkActive(link.to)
+                            ? 'border-[var(--ui-link)] bg-ui-subtle text-ui-link font-semibold'
+                            : ''
+                        }`}
+                        aria-current={isLinkActive(link.to) ? 'page' : undefined}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <div className="hidden items-center gap-3 text-sm md:flex">
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="rounded border border-ui-border px-2 py-1 text-ui-text hover:bg-ui-subtle"
-          >
-            {t.nav.theme}: {theme === 'light' ? t.nav.light : t.nav.dark}
-          </button>
-          <button
-            type="button"
-            onClick={toggleLanguage}
-            className="rounded border border-ui-border px-2 py-1 text-ui-text hover:bg-ui-subtle"
-          >
-            {t.nav.language}: {uiLanguage.toUpperCase()}
-          </button>
           {user ? (
             <>
-              <span className="text-ui-text">{user.name}</span>
-              <Link to="/me/profile" className="text-ui-muted hover:text-ui-link-hover">
-                {t.nav.profile}
+              <Link
+                to="/me/profile"
+                className={`ui-link-anim ${isLinkActive('/me/profile') ? 'is-active text-ui-link font-semibold' : 'text-ui-text'}`}
+                aria-current={isLinkActive('/me/profile') ? 'page' : undefined}
+              >
+                {user.name}
               </Link>
+              <div className="relative" ref={settingsRef}>
+                <button
+                  type="button"
+                  onClick={() => setSettingsOpen((prev) => !prev)}
+                  className="ui-btn-secondary text-sm"
+                  aria-haspopup="menu"
+                  aria-expanded={settingsOpen}
+                >
+                  {t.nav.settings}
+                </button>
+                {settingsOpen && (
+                  <div className="absolute right-0 z-30 mt-2 w-64 rounded border border-ui-border bg-ui-surface p-2 shadow-lg">
+                    <button
+                      type="button"
+                      onClick={toggleTheme}
+                      className="ui-menu-action"
+                    >
+                      {t.nav.theme}: {theme === 'light' ? t.nav.light : t.nav.dark}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={toggleLanguage}
+                      className="ui-menu-action mt-1"
+                    >
+                      {t.nav.language}: {uiLanguage.toUpperCase()}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetUiSettings}
+                      className="ui-menu-action mt-1"
+                    >
+                      {t.profile.resetButton}
+                    </button>
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={logout}
-                className="rounded border border-ui-border px-2 py-1 text-ui-text hover:bg-ui-subtle"
+                className="ui-btn-secondary text-sm"
               >
                 {t.nav.logout}
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="text-ui-muted hover:text-ui-link-hover">
+              <Link
+                to="/login"
+                className={`ui-link-anim ${isLinkActive('/login') ? 'is-active text-ui-link font-semibold' : 'text-ui-muted'}`}
+                aria-current={isLinkActive('/login') ? 'page' : undefined}
+              >
                 {t.nav.login}
               </Link>
-              <Link to="/register" className="text-ui-muted hover:text-ui-link-hover">
+              <Link
+                to="/register"
+                className={`ui-link-anim ${isLinkActive('/register') ? 'is-active text-ui-link font-semibold' : 'text-ui-muted'}`}
+                aria-current={isLinkActive('/register') ? 'page' : undefined}
+              >
                 {t.nav.register}
               </Link>
             </>
@@ -134,7 +261,7 @@ export function AppNav() {
         <button
           type="button"
           onClick={() => setMobileMenuOpen((prev) => !prev)}
-          className="rounded border border-ui-border p-2 text-ui-text md:hidden"
+          className="ui-icon-btn md:!hidden"
           aria-label={mobileMenuOpen ? t.nav.closeMenu : t.nav.openMenu}
           aria-expanded={mobileMenuOpen}
           aria-controls="mobile-nav-drawer"
@@ -161,18 +288,21 @@ export function AppNav() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(false)}
-            className="rounded border border-ui-border px-2 py-1 text-ui-text"
+            className="ui-icon-btn"
             aria-label={t.nav.closeMenu}
           >
             X
           </button>
         </div>
         <div className="space-y-2 text-sm">
-          {mainLinks.map((link) => (
+          {mobileMainLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className="block rounded px-2 py-2 text-ui-text hover:bg-ui-subtle"
+              className={`ui-menu-action block ${
+                isLinkActive(link.to) ? 'border-[var(--ui-link)] bg-ui-subtle text-ui-link font-semibold' : ''
+              }`}
+              aria-current={isLinkActive(link.to) ? 'page' : undefined}
               onClick={() => setMobileMenuOpen(false)}
             >
               {link.label}
@@ -183,14 +313,14 @@ export function AppNav() {
           <button
             type="button"
             onClick={toggleTheme}
-            className="w-full rounded border border-ui-border px-3 py-2 text-left text-ui-text hover:bg-ui-subtle"
+            className="ui-menu-action"
           >
             {t.nav.theme}: {theme === 'light' ? t.nav.light : t.nav.dark}
           </button>
           <button
             type="button"
             onClick={toggleLanguage}
-            className="w-full rounded border border-ui-border px-3 py-2 text-left text-ui-text hover:bg-ui-subtle"
+            className="ui-menu-action"
           >
             {t.nav.language}: {uiLanguage.toUpperCase()}
           </button>
@@ -199,7 +329,10 @@ export function AppNav() {
               <p className="px-1 text-ui-muted">{user.name}</p>
               <Link
                 to="/me/profile"
-                className="block rounded px-2 py-2 text-ui-text hover:bg-ui-subtle"
+                className={`ui-menu-action block ${
+                  isLinkActive('/me/profile') ? 'border-[var(--ui-link)] bg-ui-subtle text-ui-link font-semibold' : ''
+                }`}
+                aria-current={isLinkActive('/me/profile') ? 'page' : undefined}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {t.nav.profile}
@@ -207,7 +340,7 @@ export function AppNav() {
               <button
                 type="button"
                 onClick={logout}
-                className="w-full rounded border border-ui-border px-3 py-2 text-left text-ui-text hover:bg-ui-subtle"
+                className="ui-menu-action"
               >
                 {t.nav.logout}
               </button>
@@ -216,14 +349,20 @@ export function AppNav() {
             <>
               <Link
                 to="/login"
-                className="block rounded px-2 py-2 text-ui-text hover:bg-ui-subtle"
+                className={`ui-menu-action block ${
+                  isLinkActive('/login') ? 'border-[var(--ui-link)] bg-ui-subtle text-ui-link font-semibold' : ''
+                }`}
+                aria-current={isLinkActive('/login') ? 'page' : undefined}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {t.nav.login}
               </Link>
               <Link
                 to="/register"
-                className="block rounded px-2 py-2 text-ui-text hover:bg-ui-subtle"
+                className={`ui-menu-action block ${
+                  isLinkActive('/register') ? 'border-[var(--ui-link)] bg-ui-subtle text-ui-link font-semibold' : ''
+                }`}
+                aria-current={isLinkActive('/register') ? 'page' : undefined}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {t.nav.register}

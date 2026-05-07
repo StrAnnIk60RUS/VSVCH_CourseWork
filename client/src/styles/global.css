@@ -21,6 +21,15 @@
     --ui-link: #0f766e;
     --ui-link-hover: #115e59;
     --ui-input-bg: #ffffff;
+    --ui-notice-bg: #fff7ed;
+    --ui-notice-border: #fdba74;
+    --ui-notice-text: #9a3412;
+    --ui-danger-text: #991b1b;
+    --ui-success-text: #14532d;
+    --ui-success: #22c55e;
+    --ui-primary-bg: #115e59;
+    --ui-primary-text: #f8fafc;
+    --ui-primary-bg-hover: #134e4a;
   }
 
   :root[data-theme='dark'] {
@@ -33,6 +42,15 @@
     --ui-link: #5eead4;
     --ui-link-hover: #99f6e4;
     --ui-input-bg: #0b1324;
+    --ui-notice-bg: #2a1707;
+    --ui-notice-border: #c2410c;
+    --ui-notice-text: #fed7aa;
+    --ui-danger-text: #fecaca;
+    --ui-success-text: #bbf7d0;
+    --ui-success: #4ade80;
+    --ui-primary-bg: #5eead4;
+    --ui-primary-text: #022c22;
+    --ui-primary-bg-hover: #99f6e4;
   }
 
   body {
@@ -79,19 +97,393 @@
     border: 1px solid var(--ui-border);
     background: var(--ui-input-bg);
     color: var(--ui-text);
+    transition: border-color 160ms ease, box-shadow 200ms ease, background-color 160ms ease;
   }
 
   .ui-input::placeholder {
     color: var(--ui-muted);
   }
 
-  .ui-button-secondary {
-    border: 1px solid var(--ui-border);
-    color: var(--ui-text);
-    background: var(--ui-surface);
+  .ui-input:hover:not(:disabled):not(:focus) {
+    border-color: var(--ui-link);
   }
 
-  .ui-button-secondary:hover {
+  .ui-input:focus,
+  .ui-input:focus-visible {
+    outline: none;
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-brand-500) 28%, transparent);
+  }
+
+  .ui-input:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  .ui-select {
+    border: 1px solid var(--ui-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+    background-color: var(--ui-input-bg);
+    color: var(--ui-text);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--ui-muted) 50%),
+      linear-gradient(135deg, var(--ui-muted) 50%, transparent 50%);
+    background-position:
+      calc(100% - 1rem) calc(50% - 2px),
+      calc(100% - 0.7rem) calc(50% - 2px);
+    background-size:
+      0.4rem 0.4rem,
+      0.4rem 0.4rem;
+    background-repeat: no-repeat;
+    transition: border-color 160ms ease, box-shadow 200ms ease, background-color 160ms ease;
+  }
+
+  .ui-select:hover:not(:disabled):not(:focus) {
+    border-color: var(--ui-link);
+  }
+
+  .ui-select:focus,
+  .ui-select:focus-visible {
+    outline: none;
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-brand-500) 28%, transparent);
+  }
+
+  .ui-select:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  .ui-select option {
+    background-color: var(--ui-surface);
+    color: var(--ui-text);
+  }
+
+  .ui-btn-primary,
+  .ui-button-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.95rem;
+    color: var(--ui-primary-text);
+    background: var(--ui-primary-bg);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    cursor: pointer;
+    transition: background-color 160ms ease, transform 160ms ease, box-shadow 220ms ease,
+      color 160ms ease, border-color 160ms ease;
+    will-change: transform, box-shadow;
+  }
+
+  .ui-btn-primary:hover:not(:disabled),
+  .ui-button-primary:hover:not(:disabled) {
+    background: var(--ui-primary-bg-hover);
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 12px 24px -10px color-mix(in oklab, var(--color-brand-500) 70%, transparent),
+      0 4px 12px -6px color-mix(in oklab, var(--color-brand-700) 55%, transparent);
+  }
+
+  .ui-btn-primary:active:not(:disabled),
+  .ui-button-primary:active:not(:disabled) {
+    transform: translateY(0) scale(0.97);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.16);
+  }
+
+  .ui-btn-primary:focus-visible,
+  .ui-button-primary:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-brand-500) 40%, transparent);
+  }
+
+  .ui-btn-primary:disabled,
+  .ui-button-primary:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .ui-btn-secondary,
+  .ui-button-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    border: 1px solid var(--ui-border);
+    border-radius: 0.5rem;
+    padding: 0.45rem 0.85rem;
+    color: var(--ui-text);
+    background: var(--ui-surface);
+    cursor: pointer;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease,
+      transform 160ms ease, box-shadow 220ms ease;
+    will-change: transform, box-shadow;
+  }
+
+  .ui-btn-secondary:hover:not(:disabled),
+  .ui-button-secondary:hover:not(:disabled) {
     background: var(--ui-subtle);
+    border-color: var(--ui-link);
+    color: var(--ui-link);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px -10px color-mix(in oklab, var(--color-brand-500) 70%, transparent);
+  }
+
+  .ui-btn-secondary:active:not(:disabled),
+  .ui-button-secondary:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+  }
+
+  .ui-btn-secondary:focus-visible,
+  .ui-button-secondary:focus-visible {
+    outline: none;
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-brand-500) 35%, transparent);
+  }
+
+  .ui-btn-secondary:disabled,
+  .ui-button-secondary:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .ui-btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    border: 1px solid var(--ui-border);
+    border-radius: 0.5rem;
+    padding: 0.45rem 0.85rem;
+    color: var(--ui-text);
+    background: var(--ui-surface);
+    cursor: pointer;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease,
+      transform 160ms ease, box-shadow 220ms ease;
+  }
+
+  .ui-btn-danger:hover:not(:disabled) {
+    background: color-mix(in oklab, #ef4444 12%, var(--ui-surface));
+    border-color: #ef4444;
+    color: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px -10px rgba(239, 68, 68, 0.6);
+  }
+
+  :root[data-theme='dark'] .ui-btn-danger:hover:not(:disabled) {
+    background: color-mix(in oklab, #ef4444 22%, var(--ui-surface));
+    color: #fecaca;
+  }
+
+  .ui-btn-danger:active:not(:disabled) {
+    transform: translateY(0) scale(0.97);
+  }
+
+  .ui-btn-danger:focus-visible {
+    outline: none;
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.35);
+  }
+
+  .ui-btn-danger:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .ui-btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--ui-link);
+    background: transparent;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+  }
+
+  .ui-btn-ghost:hover:not(:disabled) {
+    background: var(--ui-subtle);
+    color: var(--ui-link-hover);
+    transform: translateX(2px);
+  }
+
+  .ui-btn-ghost:focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+
+  .ui-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--ui-border);
+    border-radius: 0.5rem;
+    color: var(--ui-text);
+    background: var(--ui-surface);
+    cursor: pointer;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease,
+      transform 200ms ease, box-shadow 220ms ease;
+  }
+
+  .ui-icon-btn:hover:not(:disabled) {
+    background: var(--ui-subtle);
+    border-color: var(--ui-link);
+    color: var(--ui-link);
+    transform: scale(1.08);
+    box-shadow: 0 6px 14px -10px color-mix(in oklab, var(--color-brand-500) 80%, transparent);
+  }
+
+  .ui-icon-btn:active:not(:disabled) {
+    transform: scale(0.94);
+  }
+
+  .ui-icon-btn:focus-visible {
+    outline: none;
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-brand-500) 35%, transparent);
+  }
+
+  .ui-card-interactive {
+    transition: border-color 220ms ease, box-shadow 260ms ease, transform 220ms ease,
+      background-color 220ms ease;
+    will-change: transform, box-shadow;
+  }
+
+  .ui-card-interactive:hover {
+    border-color: color-mix(in oklab, var(--color-brand-500) 55%, var(--ui-border));
+    box-shadow: 0 14px 30px -18px color-mix(in oklab, var(--color-brand-500) 70%, transparent),
+      0 6px 14px -10px rgba(15, 23, 42, 0.18);
+    transform: translateY(-2px);
+  }
+
+  .ui-card-interactive:focus-within {
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-brand-500) 25%, transparent);
+  }
+
+  .ui-card-static {
+    transition: border-color 220ms ease, box-shadow 260ms ease, background-color 220ms ease;
+  }
+
+  .ui-card-static:hover {
+    border-color: color-mix(in oklab, var(--color-brand-500) 35%, var(--ui-border));
+    box-shadow: 0 8px 20px -16px color-mix(in oklab, var(--color-brand-500) 60%, transparent);
+  }
+
+  .ui-link-anim {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 1.5px;
+    transition: background-size 220ms ease, color 160ms ease;
+    padding-bottom: 1px;
+  }
+
+  .ui-link-anim:hover {
+    background-size: 100% 1.5px;
+    color: var(--ui-link-hover);
+  }
+
+  .ui-link-anim.is-active {
+    background-size: 100% 1.5px;
+  }
+
+  .ui-link-anim:focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  .ui-menu-action {
+    width: 100%;
+    border: 1px solid var(--ui-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    color: var(--ui-text);
+    background: var(--ui-surface);
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease,
+      transform 160ms ease;
+    cursor: pointer;
+  }
+
+  .ui-menu-action:hover {
+    background: var(--ui-subtle);
+    border-color: var(--ui-link);
+    color: var(--ui-link);
+    transform: translateX(2px);
+  }
+
+  .ui-menu-action:active {
+    transform: translateX(1px) translateY(1px);
+  }
+
+  .ui-menu-action:focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+
+  .ui-notice {
+    border: 1px solid var(--ui-notice-border);
+    background: var(--ui-notice-bg);
+    color: var(--ui-notice-text);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .text-ui-danger {
+    color: var(--ui-danger-text);
+  }
+
+  .text-ui-success {
+    color: var(--ui-success-text);
+  }
+
+  .bg-ui-success {
+    background: var(--ui-success);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-btn-primary,
+  .ui-button-primary,
+  .ui-btn-secondary,
+  .ui-button-secondary,
+  .ui-btn-danger,
+  .ui-btn-ghost,
+  .ui-icon-btn,
+  .ui-card-interactive,
+  .ui-card-static,
+  .ui-link-anim,
+  .ui-menu-action,
+  .ui-input,
+  .ui-select {
+    transition: none !important;
+  }
+
+  .ui-btn-primary:hover,
+  .ui-button-primary:hover,
+  .ui-btn-secondary:hover,
+  .ui-button-secondary:hover,
+  .ui-btn-danger:hover,
+  .ui-btn-ghost:hover,
+  .ui-icon-btn:hover,
+  .ui-card-interactive:hover,
+  .ui-menu-action:hover,
+  .ui-btn-primary:active,
+  .ui-button-primary:active,
+  .ui-btn-secondary:active,
+  .ui-button-secondary:active,
+  .ui-btn-danger:active,
+  .ui-icon-btn:active {
+    transform: none !important;
   }
 }
