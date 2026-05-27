@@ -1,5 +1,5 @@
-import type { StudentItem } from './useTeacherCourseManage';
-import { useI18n } from '../../hooks/useI18n';
+import type { StudentItem } from '../useTeacherCourseManage';
+import { useI18n } from '../../../hooks/useI18n';
 
 type Props = {
   students: StudentItem[];

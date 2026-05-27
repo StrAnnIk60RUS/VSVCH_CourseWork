@@ -4,7 +4,8 @@
 
 ## Скрипты
 
-- `npm run dev` — `webpack-dev-server` (по умолчанию порт **5173**, совпадает с `CLIENT_ORIGIN` в `server/env.example`)
+- `npm start` — `webpack-dev-server` (по умолчанию порт **5173**, совпадает с `CLIENT_ORIGIN` в `server/env.example`)
+- `npm run dev` — то же, что `npm start`
 - `npm run build` — проверка типов (`tsc --noEmit`) и production-сборка
 - `npm run lint` — ESLint
 

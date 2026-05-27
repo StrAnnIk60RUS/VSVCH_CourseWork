@@ -25,15 +25,16 @@ export async function downloadReport(
 }
 
 export async function sendReportEmail(input: {
-  email: string;
+  email?: string;
   type: 'student-progress' | 'course-summary';
   format: 'pdf' | 'docx';
   courseId?: string;
 }) {
   const uiLanguage = getCurrentUiLanguage();
+  const normalizedEmail = input.email?.trim();
   const { data } = await http.post(
     '/reports/send-email',
-    { ...input, lang: uiLanguage },
+    { ...input, email: normalizedEmail || undefined, lang: uiLanguage },
     { headers: { 'Accept-Language': uiLanguage } },
   );
   return data as { sent?: boolean; demo?: boolean; message?: string };

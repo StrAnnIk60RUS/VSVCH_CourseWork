@@ -39,6 +39,10 @@ export async function createCourse(payload: {
   return data as { id: string };
 }
 
+export async function deleteCourse(courseId: string) {
+  await http.delete(`/courses/${courseId}`);
+}
+
 export async function updateCourse(
   courseId: string,
   payload: Partial<{

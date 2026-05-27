@@ -5,6 +5,7 @@ import { RequireAuth } from './components/auth';
 import { AppFooter, AppNav } from './components/layout';
 import { useI18n } from './hooks/useI18n';
 import { AuthSessionContext } from './hooks/useAuthSession';
+import { ToastProvider, ToastViewport } from './hooks/useToast';
 import { STORAGE_KEYS } from './constants/storage';
 import {
   CourseDetailPage,
@@ -27,6 +28,7 @@ import {
 import { useAppDispatch } from './store/hooks';
 import { clearSession, setAuthChecked, setTheme, setUiLanguage } from './store/slices/appSlice';
 import type { AuthUser } from './types/domain';
+import { formatDateTime } from './utils/dateTime';
 import { readAccessToken } from './utils/session';
 
 function AppChrome() {
@@ -156,32 +158,34 @@ export default function App() {
 
   return (
     <AuthSessionContext.Provider value={authContextValue}>
-      <BrowserRouter>
-      {dueNotifications.length > 0 ? (
-        <div className="pointer-events-none fixed right-4 top-4 z-50 space-y-2">
-          {dueNotifications.map((item) => (
-            <div
-              key={item.id}
-              className="ui-notice pointer-events-auto max-w-sm shadow-lg"
-              role="status"
-            >
-              <p className="text-sm font-semibold">⏰ {t.app.reminderTitle}</p>
-              <p className="mt-1 text-sm font-medium">{item.title}</p>
-              <p className="mt-1 text-xs opacity-85">{new Date(item.remindAt).toLocaleString()}</p>
-              <button
-                type="button"
-                onClick={() => {
-                  void dismissNotification(item.id);
-                }}
-                className="ui-btn-secondary mt-2 px-2 py-1 text-xs"
+      <ToastProvider>
+        <BrowserRouter>
+        <ToastViewport />
+        {dueNotifications.length > 0 ? (
+          <div className="pointer-events-none fixed left-4 top-4 z-50 space-y-2">
+            {dueNotifications.map((item) => (
+              <div
+                key={item.id}
+                className="ui-notice pointer-events-auto max-w-sm shadow-lg"
+                role="status"
               >
-                {t.app.close}
-              </button>
-            </div>
-          ))}
-        </div>
-      ) : null}
-      <Routes>
+                <p className="text-sm font-semibold">⏰ {t.app.reminderTitle}</p>
+                <p className="mt-1 text-sm font-medium">{item.title}</p>
+                <p className="mt-1 text-xs opacity-85">{formatDateTime(item.remindAt)}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void dismissNotification(item.id);
+                  }}
+                  className="ui-btn-secondary mt-2 px-2 py-1 text-xs"
+                >
+                  {t.app.close}
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        <Routes>
         <Route element={<AppChrome />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -274,8 +278,9 @@ export default function App() {
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
-      </Routes>
-      </BrowserRouter>
+        </Routes>
+        </BrowserRouter>
+      </ToastProvider>
     </AuthSessionContext.Provider>
   );
 }

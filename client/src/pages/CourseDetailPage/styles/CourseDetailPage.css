@@ -1,0 +1,9 @@
+.course-detail-page {
+  display: contents;
+}
+
+.course-detail-page__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

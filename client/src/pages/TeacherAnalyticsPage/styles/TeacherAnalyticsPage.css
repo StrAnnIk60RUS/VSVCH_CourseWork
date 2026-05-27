@@ -1,0 +1,9 @@
+.teacher-analytics-page {
+  display: contents;
+}
+
+.teacher-analytics-page__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

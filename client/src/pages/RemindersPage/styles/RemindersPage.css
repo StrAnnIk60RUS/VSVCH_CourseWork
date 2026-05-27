@@ -1,0 +1,9 @@
+.reminders-page {
+  display: contents;
+}
+
+.reminders-page__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

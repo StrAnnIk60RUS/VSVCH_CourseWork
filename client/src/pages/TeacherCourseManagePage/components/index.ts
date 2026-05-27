@@ -1,0 +1,1 @@
+export { TeacherCourseManagePageContent } from './TeacherCourseManagePageContent';
