@@ -2,6 +2,29 @@ import { Op } from 'sequelize';
 import { Course, Enrollment, Exercise, Lesson, Submission, User } from '../db/models/index.js';
 import { getLastSubmissionByUserIds } from './activityService.js';
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
+function formatDateOnly(value) {
+  if (value == null) {
+    return null;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return null;
+  }
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * Sequelize returns `created_at` in dataValues when underscored timestamps are enabled.
+ * @param {{ createdAt?: Date; created_at?: Date; getDataValue?: (key: string) => unknown }} row
+ */
+function readCreatedAt(row) {
+  return row.createdAt ?? row.created_at ?? row.getDataValue?.('created_at') ?? null;
+}
+
 export async function getStudentProgressReport(userId) {
   const user = await User.findByPk(userId);
   if (!user) {
@@ -60,7 +83,7 @@ export async function getCourseSummaryReport(courseId) {
     name: enr.user.name,
     email: enr.user.email,
     progress: enr.progress,
-    lastActivity: new Date(lastByUser[enr.userId] || enr.createdAt).toISOString().slice(0, 10),
+    lastActivity: formatDateOnly(lastByUser[enr.userId]),
   }));
   const avgProgress =
     students.length > 0
@@ -104,8 +127,9 @@ export async function getCourseAnalyticsReport(courseId, periodDays = 30) {
     };
   });
 
-  const riskStudents = students.filter((student) => student.progress < 40 || student.inactiveDays >= 14).length;
-  const activeStudents = students.filter((student) => student.inactiveDays <= 7).length;
+  const riskStudents = students.filter(
+    (student) => student.progress < 40 || student.inactiveDays >= safePeriodDays,
+  ).length;
 
   const buckets = {
     p0_25: 0,
@@ -168,6 +192,8 @@ export async function getCourseAnalyticsReport(courseId, periodDays = 30) {
     dayMap[dateKey].submissions += 1;
     dayMap[dateKey].activeStudents.add(row.userId);
   }
+
+  const activeStudents = new Set(submissions.map((row) => row.userId)).size;
 
   const timeline = Object.values(dayMap).map((day) => ({
     date: day.date,

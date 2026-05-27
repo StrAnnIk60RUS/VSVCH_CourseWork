@@ -179,7 +179,9 @@ async function ensureReminder(userId, { courseId, title, remindAt }) {
 }
 
 function exercisePayload(question, correctAnswer, maxScore = 10) {
-  return { question, correctAnswer, maxScore };
+  const normalizedAnswer = String(correctAnswer ?? '').trim();
+  const questionWithDemoAnswer = `${question}\n\n[Демо-подсказка для быстрого теста] Правильный ответ: ${normalizedAnswer}`;
+  return { question: questionWithDemoAnswer, correctAnswer: normalizedAnswer, maxScore };
 }
 
 async function ensureSubmission(row) {
@@ -625,14 +627,99 @@ async function main() {
   }
 
   const bulkCourses = [];
+  const languageLabelByCode = {
+    en: 'английскому',
+    de: 'немецкому',
+    es: 'испанскому',
+  };
+  const businessThemes = [
+    'деловой переписке',
+    'рабочим созвонам',
+    'презентациям и питчам',
+    'переговорам с клиентом',
+    'управлению задачами',
+    'обратной связи в команде',
+  ];
+
+  function buildLessonContent(level, topic, lessonIdx) {
+    if (lessonIdx === 1) {
+      return `## Теория: базовая лексика (${level})
+- Тема урока: ${topic}.
+- Разберите 8 ключевых слов и 3 устойчивые фразы.
+
+## Практика
+1. Составьте 3 коротких предложения по теме.
+2. Подчеркните главное слово в каждом предложении.`;
+    }
+    if (lessonIdx === 2) {
+      return `## Теория: грамматика в контексте
+- Как строится утвердительное предложение по теме "${topic}".
+- Типичные ошибки студентов уровня ${level} и как их исправлять.
+
+## Практика
+Преобразуйте 4 фразы из разговорного стиля в нейтрально-деловой.`;
+    }
+    return `## Теория: коммуникация на практике
+- Микродиалог по теме "${topic}".
+- Шаблон для самооценки ответа перед отправкой преподавателю.
+
+## Практика
+Напишите короткий ответ коллеге (2-3 предложения) с вежливой формулировкой.`;
+  }
+
+  function buildExercisePayload(courseIdx, lessonIdx, exIdx) {
+    const normalizedIdx = ((courseIdx - 1) % 6) + 1;
+    if (lessonIdx === 1 && exIdx === 1) {
+      return exercisePayload(
+        'Как одним словом по-английски называется повестка встречи?',
+        'agenda',
+        10,
+      );
+    }
+    if (lessonIdx === 1 && exIdx === 2) {
+      return exercisePayload(
+        'Дополните фразу вежливого согласия: I fully ___ with your point.',
+        'agree',
+        10,
+      );
+    }
+    if (lessonIdx === 2 && exIdx === 1) {
+      return exercisePayload(
+        'Выберите нейтрально-деловой вариант отказа (одно слово): "I ___ this proposal for now."',
+        'decline',
+        10,
+      );
+    }
+    if (lessonIdx === 2 && exIdx === 2) {
+      return exercisePayload(
+        'Заполните пропуск: Could we ___ this in more detail tomorrow?',
+        'discuss',
+        10,
+      );
+    }
+    if (lessonIdx === 3 && exIdx === 1) {
+      return exercisePayload(
+        'Какое слово завершает фразу: Thank you for your quick ___.',
+        'response',
+        10,
+      );
+    }
+    return exercisePayload(
+      `Контрольный вопрос ${normalizedIdx}: напишите слово "confirmed" в нижнем регистре.`,
+      'confirmed',
+      10,
+    );
+  }
   for (let courseIdx = 1; courseIdx <= 12; courseIdx += 1) {
     const level = courseIdx % 2 === 0 ? 'A2' : 'B1';
-    const language = courseIdx % 3 === 0 ? 'de' : 'en';
+    const language = courseIdx % 3 === 0 ? 'de' : courseIdx % 5 === 0 ? 'es' : 'en';
+    const topic = businessThemes[(courseIdx - 1) % businessThemes.length];
+    const languageLabel = languageLabelByCode[language] ?? 'иностранному языку';
     const course = await ensureCourse({
       id: `seed-bulk-course-${courseIdx}`,
-      title: `Seed Bulk Course ${courseIdx}`,
+      title: `Практикум по ${languageLabel}: ${topic} (модуль ${courseIdx})`,
       description:
-        'Автосгенерированный курс для выполнения требования по минимальному объёму тестовых данных.',
+        `Демо-курс для проверки функционала преподавателя: понятная теория, практические задания и прозрачные правильные ответы. Уровень: ${level}, язык: ${language}.`,
       language,
       level,
       published: true,
@@ -649,27 +736,23 @@ async function main() {
   reminderDate.setDate(reminderDate.getDate() + 5);
 
   for (const [courseIndex, course] of bulkCourses.entries()) {
+    const topic = businessThemes[courseIndex % businessThemes.length];
     for (let lessonIdx = 1; lessonIdx <= 3; lessonIdx += 1) {
       const lesson = await ensureLesson({
         id: `seed-bulk-course-${courseIndex + 1}-lesson-${lessonIdx}`,
         courseId: course.id,
-        title: `Bulk Lesson ${lessonIdx}`,
+        title: `Урок ${lessonIdx}. ${lessonIdx === 1 ? 'Лексика и термины' : lessonIdx === 2 ? 'Грамматика и формулировки' : 'Деловая коммуникация'}`,
         sortOrder: lessonIdx,
-        content:
-          'Контент урока сгенерирован автоматически для увеличения числа связанных записей в базе.',
+        content: buildLessonContent(course.level, topic, lessonIdx),
       });
 
       for (let exIdx = 1; exIdx <= 2; exIdx += 1) {
         const exercise = await ensureExercise({
           id: `seed-bulk-course-${courseIndex + 1}-lesson-${lessonIdx}-exercise-${exIdx}`,
           lessonId: lesson.id,
-          title: `Bulk Exercise ${lessonIdx}.${exIdx}`,
+          title: `Проверка ${lessonIdx}.${exIdx}`,
           type: 'text',
-          payload: exercisePayload(
-            `Контрольный вопрос ${lessonIdx}.${exIdx} для курса ${courseIndex + 1}`,
-            'ok',
-            10,
-          ),
+          payload: buildExercisePayload(courseIndex + 1, lessonIdx, exIdx),
         });
         allBulkExercises.push(exercise);
       }
@@ -705,7 +788,7 @@ async function main() {
         userId: studentUser.id,
         exerciseId: exercise.id,
         score: 10,
-        payload: { answer: 'ok', correct: true, seed: true },
+        payload: { answer: 'model-answer', correct: true, seed: true },
       });
     }
   }
@@ -720,7 +803,7 @@ async function main() {
       reviewAuthor.id,
       course.id,
       4 + (idx % 2),
-      `Seed review for bulk course ${idx + 1}`,
+      `Полезный модуль ${idx + 1}: задания проверяются быстро, ответы в упражнениях понятны преподавателю.`,
     );
     await syncCourseRatingAverage(course.id);
   }

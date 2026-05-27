@@ -16,11 +16,13 @@ export async function getLastSubmissionByUserIds(userIds) {
     raw: true,
   });
 
-  /** @type {Record<string, string>} */
+  /** @type {Record<string, Date | string>} */
   const result = {};
   for (const row of rows) {
-    if (row.lastActivity) {
-      result[row.userId] = row.lastActivity;
+    const userId = row.userId ?? row.user_id;
+    const lastActivity = row.lastActivity ?? row.last_activity;
+    if (userId && lastActivity) {
+      result[userId] = lastActivity;
     }
   }
   return result;

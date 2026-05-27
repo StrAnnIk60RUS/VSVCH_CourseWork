@@ -16,6 +16,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { canManageCourse, hasRole } from '../utils/permissions.js';
 import { verifyAccessToken } from '../utils/jwt.js';
 import { getAuthUserDtoById } from '../utils/authUser.js';
+import { REVIEW_MIN_PROGRESS_PERCENT } from '../db/models/constants.js';
 
 const router = Router();
 
@@ -520,6 +521,11 @@ router.post('/:courseId/review', requireAuth, async (req, res, next) => {
     }
     if (!enrollment) {
       return res.status(403).json({ error: 'Сначала запишитесь на курс' });
+    }
+    if ((Number(enrollment.progress) || 0) < REVIEW_MIN_PROGRESS_PERCENT) {
+      return res.status(403).json({
+        error: `Отзыв доступен после ${REVIEW_MIN_PROGRESS_PERCENT}% прохождения курса`,
+      });
     }
 
     const result = await sequelize.transaction(async (tx) => {

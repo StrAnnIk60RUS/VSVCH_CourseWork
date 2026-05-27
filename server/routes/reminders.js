@@ -4,6 +4,7 @@ import { Reminder } from '../db/models/index.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
+const FUTURE_BUFFER_MS = 30_000;
 
 const createSchema = z.object({
   title: z.string().trim().min(1, 'title is required'),
@@ -16,6 +17,10 @@ const updateSchema = z.object({
   remindAt: z.string().datetime({ offset: true }).optional(),
   courseId: z.string().optional().nullable(),
 });
+
+function isFutureDate(value) {
+  return value.getTime() > Date.now() + FUTURE_BUFFER_MS;
+}
 
 router.get('/', requireAuth, async (req, res, next) => {
   try {
@@ -38,6 +43,9 @@ router.post('/', requireAuth, async (req, res, next) => {
     const remindAt = new Date(parsed.data.remindAt);
     if (Number.isNaN(remindAt.getTime())) {
       return res.status(400).json({ error: 'Некорректная дата напоминания' });
+    }
+    if (!isFutureDate(remindAt)) {
+      return res.status(400).json({ error: 'Время напоминания должно быть в будущем' });
     }
     const reminder = await Reminder.create({
       userId: req.authUser.id,
@@ -68,6 +76,9 @@ router.put('/:id', requireAuth, async (req, res, next) => {
       const date = new Date(parsed.data.remindAt);
       if (Number.isNaN(date.getTime())) {
         return res.status(400).json({ error: 'Некорректная дата напоминания' });
+      }
+      if (!isFutureDate(date)) {
+        return res.status(400).json({ error: 'Время напоминания должно быть в будущем' });
       }
       remindAt = date;
     }
