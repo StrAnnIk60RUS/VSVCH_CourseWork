@@ -112,11 +112,20 @@ type Dictionary = {
     pageDescription: string;
     profileData: string;
     resetUi: string;
+    certificates: string;
     email: string;
     save: string;
     nameUpdated: string;
     localSettingsReset: string;
     resetButton: string;
+    certificateNumber: string;
+    certificateIssuedAt: string;
+    certificatesEmpty: string;
+    downloadPdf: string;
+    certificateDownloaded: string;
+    teacherMiniStats: string;
+    teacherStatsCourse: string;
+    teacherStatsNoCourses: string;
   };
   progress: {
     pageTitle: string;
@@ -132,6 +141,8 @@ type Dictionary = {
     coursesLink: string;
     homeLink: string;
     emailPlaceholder: string;
+    reportDownloadedPdf: string;
+    reportDownloadedDocx: string;
   };
   app: { reminderTitle: string; close: string };
   auth: { loadingSession: string };
@@ -202,6 +213,7 @@ type Dictionary = {
     savePending: string;
     saveRating: string;
     rateAfterEnroll: string;
+    rateAfterProgress: string;
     lessons: string;
     lessonProgress: string;
     completed: string;
@@ -215,6 +227,7 @@ type Dictionary = {
     loadFailedFallback: string;
     titleRequired: string;
     dateRequired: string;
+    futureDateRequired: string;
     editSaved: string;
     newSection: string;
     yourSection: string;
@@ -338,6 +351,10 @@ type Dictionary = {
     notAvailable: string;
     openReviews: string;
     manage: string;
+    delete: string;
+    deleting: string;
+    deleted: string;
+    deleteConfirm: string;
   };
   teacherAnalytics: {
     pageTitle: string;
@@ -349,10 +366,13 @@ type Dictionary = {
     students: string;
     avgProgress: string;
     active7d: string;
+    activePeriod: string;
     riskStudents: string;
     riskDefinition: string;
     submissionsTrend: string;
     activityTrend: string;
+    submissionsSeries: string;
+    activeStudentsSeries: string;
     progressDistribution: string;
     studentsProgress: string;
     riskOnly: string;
@@ -496,11 +516,20 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       pageDescription: 'Профиль пользователя и сброс UI-настроек.',
       profileData: 'Данные профиля',
       resetUi: 'Сброс интерфейса',
+      certificates: 'Сертификаты',
       email: 'Email',
       save: 'Сохранить',
       nameUpdated: 'Имя обновлено',
       localSettingsReset: 'Локальные настройки сброшены',
       resetButton: 'Сбросить настройки интерфейса',
+      certificateNumber: 'Номер',
+      certificateIssuedAt: 'Выдан',
+      certificatesEmpty: 'Сертификатов пока нет.',
+      downloadPdf: 'Скачать PDF',
+      certificateDownloaded: 'Сертификат скачан.',
+      teacherMiniStats: 'Мини-статистика за 7 дней',
+      teacherStatsCourse: 'Курс для статистики',
+      teacherStatsNoCourses: 'У вас пока нет курсов для отображения статистики.',
     },
     progress: {
       pageTitle: 'Прогресс',
@@ -516,6 +545,8 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       coursesLink: 'Каталог курсов',
       homeLink: 'На главную',
       emailPlaceholder: 'email@example.com',
+      reportDownloadedPdf: 'PDF-отчёт скачан.',
+      reportDownloadedDocx: 'DOCX-отчёт скачан.',
     },
     app: { reminderTitle: 'Напоминание', close: 'Закрыть' },
     auth: { loadingSession: 'Загрузка сессии...' },
@@ -586,6 +617,7 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       savePending: 'Сохранение...',
       saveRating: 'Сохранить оценку',
       rateAfterEnroll: 'Оценить курс можно после записи на него.',
+      rateAfterProgress: 'Оценить курс можно после прохождения минимум {percent}%.',
       lessons: 'Уроки',
       lessonProgress: 'Прогресс урока',
       completed: 'Пройден',
@@ -599,6 +631,7 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       loadFailedFallback: 'Не удалось загрузить напоминания. Попробуйте обновить страницу.',
       titleRequired: 'Укажите, о чём напомнить.',
       dateRequired: 'Выберите дату и время напоминания.',
+      futureDateRequired: 'Время напоминания должно быть в будущем.',
       editSaved: 'Готово — изменения сохранены.',
       newSection: 'Новое напоминание',
       yourSection: 'Ваши напоминания',
@@ -649,7 +682,7 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       backToCourse: 'Вернуться к курсу',
     },
     teacherManage: {
-      pageTitle: 'Управление',
+      pageTitle: 'Редактирование курса',
       pageDescription: 'Редактируйте материалы курса, отслеживайте студентов и выгружайте отчеты.',
       backToCourses: 'К списку моих курсов',
       content: 'Уроки и упражнения',
@@ -699,8 +732,8 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       noCourseId: 'Идентификатор курса не указан.',
     },
     teacherNewCourse: {
-      pageTitle: 'Новый курс',
-      pageDescription: 'Создание курса преподавателем.',
+      pageTitle: 'Создание курса',
+      pageDescription: 'Создайте новый курс и настройте его основные параметры.',
       backToCourses: 'К списку моих курсов',
       formTitle: 'Форма курса',
       title: 'Название',
@@ -722,6 +755,10 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       notAvailable: 'н/д',
       openReviews: 'Отзывы',
       manage: 'Управлять',
+      delete: 'Удалить',
+      deleting: 'Удаление...',
+      deleted: 'Курс удален.',
+      deleteConfirm: 'Удалить курс "{title}"?',
     },
     teacherAnalytics: {
       pageTitle: 'Аналитика преподавателя',
@@ -733,10 +770,13 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       students: 'Студентов',
       avgProgress: 'Средний прогресс',
       active7d: 'Активных за 7 дней',
+      activePeriod: 'Активных за период',
       riskStudents: 'Группа риска',
-      riskDefinition: 'Прогресс < 40% или не было активности 14+ дней.',
+      riskDefinition: 'Прогресс < 40% или не было активности в выбранный период.',
       submissionsTrend: 'Динамика отправок',
       activityTrend: 'Активные студенты по дням',
+      submissionsSeries: 'Отправки',
+      activeStudentsSeries: 'Активные студенты',
       progressDistribution: 'Распределение прогресса',
       studentsProgress: 'Прогресс студентов',
       riskOnly: 'Только группа риска',
@@ -746,7 +786,7 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       exportPdf: 'PDF отчёт',
       exportDocx: 'DOCX отчёт',
       exportCsv: 'CSV студентов',
-      sendEmail: 'Отправить отчёт',
+      sendEmail: 'Отправить отчёт на e-mail',
     },
   },
   en: {
@@ -878,11 +918,20 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       pageDescription: 'User profile and UI settings reset.',
       profileData: 'Profile data',
       resetUi: 'UI reset',
+      certificates: 'Certificates',
       email: 'Email',
       save: 'Save',
       nameUpdated: 'Name updated',
       localSettingsReset: 'Local settings were reset',
       resetButton: 'Reset interface settings',
+      certificateNumber: 'Number',
+      certificateIssuedAt: 'Issued',
+      certificatesEmpty: 'No certificates yet.',
+      downloadPdf: 'Download PDF',
+      certificateDownloaded: 'Certificate downloaded.',
+      teacherMiniStats: 'Mini stats for 7 days',
+      teacherStatsCourse: 'Course for stats',
+      teacherStatsNoCourses: 'You have no courses yet to show statistics.',
     },
     progress: {
       pageTitle: 'Progress',
@@ -898,6 +947,8 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       coursesLink: 'Course catalog',
       homeLink: 'Home',
       emailPlaceholder: 'email@example.com',
+      reportDownloadedPdf: 'PDF report downloaded.',
+      reportDownloadedDocx: 'DOCX report downloaded.',
     },
     app: { reminderTitle: 'Reminder', close: 'Close' },
     auth: { loadingSession: 'Loading session...' },
@@ -968,6 +1019,7 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       savePending: 'Saving...',
       saveRating: 'Save rating',
       rateAfterEnroll: 'You can rate this course after enrollment.',
+      rateAfterProgress: 'You can rate this course after completing at least {percent}%.',
       lessons: 'Lessons',
       lessonProgress: 'Lesson progress',
       completed: 'Completed',
@@ -981,6 +1033,7 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       loadFailedFallback: 'Failed to load reminders. Please refresh the page.',
       titleRequired: 'Please enter reminder text.',
       dateRequired: 'Please choose reminder date and time.',
+      futureDateRequired: 'Reminder time must be in the future.',
       editSaved: 'Done — changes are saved.',
       newSection: 'New reminder',
       yourSection: 'Your reminders',
@@ -1031,7 +1084,7 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       backToCourse: 'Back to course',
     },
     teacherManage: {
-      pageTitle: 'Manage',
+      pageTitle: 'Course editing',
       pageDescription: 'Edit course content, track students, and export reports.',
       backToCourses: 'Back to my courses',
       content: 'Lessons and exercises',
@@ -1081,8 +1134,8 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       noCourseId: 'Course identifier is missing.',
     },
     teacherNewCourse: {
-      pageTitle: 'New course',
-      pageDescription: 'Teacher course creation.',
+      pageTitle: 'Course creation',
+      pageDescription: 'Create a new course and configure its basic settings.',
       backToCourses: 'Back to my courses',
       formTitle: 'Course form',
       title: 'Title',
@@ -1104,6 +1157,10 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       notAvailable: 'n/a',
       openReviews: 'Reviews',
       manage: 'Manage',
+      delete: 'Delete',
+      deleting: 'Deleting...',
+      deleted: 'Course deleted.',
+      deleteConfirm: 'Delete course "{title}"?',
     },
     teacherAnalytics: {
       pageTitle: 'Teacher analytics',
@@ -1115,10 +1172,13 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       students: 'Students',
       avgProgress: 'Avg progress',
       active7d: 'Active in 7 days',
+      activePeriod: 'Active in period',
       riskStudents: 'Risk students',
-      riskDefinition: 'Progress < 40% or no activity for 14+ days.',
+      riskDefinition: 'Progress < 40% or no activity in the selected period.',
       submissionsTrend: 'Submissions trend',
       activityTrend: 'Active students by day',
+      submissionsSeries: 'Submissions',
+      activeStudentsSeries: 'Active students',
       progressDistribution: 'Progress distribution',
       studentsProgress: 'Students progress',
       riskOnly: 'Risk only',
@@ -1128,7 +1188,7 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       exportPdf: 'PDF report',
       exportDocx: 'DOCX report',
       exportCsv: 'Students CSV',
-      sendEmail: 'Send report',
+      sendEmail: 'Send report by e-mail',
     },
   },
 };

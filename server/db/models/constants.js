@@ -1,0 +1,5 @@
+export const ROLE_CODES = ['STUDENT', 'TEACHER', 'ADMIN'];
+
+export const COURSE_STAFF_ROLES = ['TEACHER', 'AUTHOR', 'METHODIST', 'CURATOR'];
+
+export const REVIEW_MIN_PROGRESS_PERCENT = 20;

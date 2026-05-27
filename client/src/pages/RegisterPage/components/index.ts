@@ -1,0 +1,1 @@
+export { RegisterPageContent } from './RegisterPageContent';

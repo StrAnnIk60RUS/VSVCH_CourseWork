@@ -1,4 +1,5 @@
 ﻿import { Router } from 'express';
+import { z } from 'zod';
 import {
   Course,
   CourseStaff,
@@ -12,6 +13,26 @@ import { canManageCourse, hasRole } from '../utils/permissions.js';
 import { getLastSubmissionByUserIds } from '../services/activityService.js';
 
 const router = Router();
+
+const courseIdParamSchema = z.object({
+  courseId: z.string().trim().min(1, 'courseId is required'),
+});
+
+const studentsQuerySchema = z.object({
+  status: z.enum(['active', 'inactive']).optional(),
+  sort: z.enum(['name', 'progress', 'activity']).default('name'),
+  order: z.enum(['asc', 'desc']).default('desc'),
+});
+
+function validationError(message, parsed) {
+  return {
+    error: message,
+    details: parsed.error.issues.map((issue) => ({
+      path: issue.path.join('.') || 'query',
+      message: issue.message,
+    })),
+  };
+}
 
 function toStudentRow(enrollment, lastActivity) {
   const now = Date.now();
@@ -92,7 +113,16 @@ router.get('/courses/:courseId/students', requireAuth, async (req, res, next) =>
     if (!hasRole(req, 'TEACHER')) {
       return res.status(403).json({ error: 'Недостаточно прав' });
     }
-    const { courseId } = req.params;
+    const paramsParsed = courseIdParamSchema.safeParse(req.params);
+    if (!paramsParsed.success) {
+      return res.status(400).json(validationError('Некорректный идентификатор курса', paramsParsed));
+    }
+    const queryParsed = studentsQuerySchema.safeParse(req.query);
+    if (!queryParsed.success) {
+      return res.status(400).json(validationError('Некорректные параметры запроса', queryParsed));
+    }
+    const { courseId } = paramsParsed.data;
+    const { status, sort, order: orderDir } = queryParsed.data;
     const allowed = await canManageCourse(courseId, req.authUser.id);
     if (!allowed) {
       return res.status(403).json({ error: 'Недостаточно прав' });
@@ -106,15 +136,13 @@ router.get('/courses/:courseId/students', requireAuth, async (req, res, next) =>
     const lastByUser = await getLastSubmissionByUserIds(userIds);
 
     let items = enrollments.map((enr) => toStudentRow(enr, lastByUser[enr.userId]));
-    const status = req.query.status;
     if (status === 'active') {
       items = items.filter((x) => x.active);
     } else if (status === 'inactive') {
       items = items.filter((x) => !x.active);
     }
 
-    const sort = typeof req.query.sort === 'string' ? req.query.sort : 'name';
-    const order = typeof req.query.order === 'string' && req.query.order.toLowerCase() === 'asc' ? 1 : -1;
+    const order = orderDir === 'asc' ? 1 : -1;
     items.sort((a, b) => {
       if (sort === 'progress') {
         return (a.progress - b.progress) * order;
@@ -136,7 +164,11 @@ router.get('/courses/:courseId/students.csv', requireAuth, async (req, res, next
     if (!hasRole(req, 'TEACHER')) {
       return res.status(403).json({ error: 'Недостаточно прав' });
     }
-    const { courseId } = req.params;
+    const paramsParsed = courseIdParamSchema.safeParse(req.params);
+    if (!paramsParsed.success) {
+      return res.status(400).json(validationError('Некорректный идентификатор курса', paramsParsed));
+    }
+    const { courseId } = paramsParsed.data;
     const allowed = await canManageCourse(courseId, req.authUser.id);
     if (!allowed) {
       return res.status(403).json({ error: 'Недостаточно прав' });
@@ -176,7 +208,11 @@ router.get('/courses/:courseId', requireAuth, async (req, res, next) => {
     if (!hasRole(req, 'TEACHER')) {
       return res.status(403).json({ error: 'Недостаточно прав' });
     }
-    const { courseId } = req.params;
+    const paramsParsed = courseIdParamSchema.safeParse(req.params);
+    if (!paramsParsed.success) {
+      return res.status(400).json(validationError('Некорректный идентификатор курса', paramsParsed));
+    }
+    const { courseId } = paramsParsed.data;
     const allowed = await canManageCourse(courseId, req.authUser.id);
     if (!allowed) {
       return res.status(403).json({ error: 'Недостаточно прав' });

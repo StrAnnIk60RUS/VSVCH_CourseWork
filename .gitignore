@@ -25,6 +25,14 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Python
+__pycache__/
+*.pyc
+
+# Word / Enterprise Architect temp and locks
+~$*.docx
+*.ldb
+
 # Caches and tool output
 .cache/
 .parcel-cache/

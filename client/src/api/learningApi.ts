@@ -1,4 +1,5 @@
 import { http } from './http';
+import { STORAGE_KEYS } from '../constants/storage';
 
 export async function enrollToCourse(courseId: string) {
   const { data } = await http.post('/enrollments', { courseId });
@@ -77,8 +78,11 @@ export async function getMyCertificates() {
 }
 
 export async function downloadCertificatePdf(certificateId: string, documentNumber: string) {
+  const uiLanguage = localStorage.getItem(STORAGE_KEYS.uiLanguage) === 'ru' ? 'ru' : 'en';
   const response = await http.get(`/certificates/${certificateId}/pdf`, {
     responseType: 'blob',
+    params: { lang: uiLanguage },
+    headers: { 'Accept-Language': uiLanguage },
   });
   const blob = response.data as Blob;
   const url = URL.createObjectURL(blob);

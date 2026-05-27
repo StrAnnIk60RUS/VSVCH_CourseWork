@@ -43,6 +43,8 @@ VSVH/
 
 ## Быстрый старт
 
+Подробное руководство для проверяющего (ПЗ, раздел 4): [`docs/4-rukovodstvo-sistemnogo-programmista.md`](docs/4-rukovodstvo-sistemnogo-programmista.md) (импорт дампа `server/database/dumps/vsvh_languages.sql`, запуск `npm start` в `server/` и `client/`).
+
 ### 1) Требования
 
 - Node.js LTS (рекомендуется 20+)
@@ -105,13 +107,14 @@ npm run dev
 - `npm run db:seed` — заполнение БД тестовыми данными.
 
 ### Client (`client/package.json`)
-- `npm run dev -w client` — webpack dev server.
+- `npm start` (в каталоге `client/`) или `npm start -w client` — webpack dev server.
+- `npm run dev -w client` — то же, что `npm start` (алиас для обратной совместимости).
 - `npm run build -w client` — `tsc --noEmit` + production build.
 - `npm run lint -w client` — ESLint.
 
 ### Server (`server/package.json`)
+- `npm start` (в каталоге `server/`) или `npm start -w server` — запуск API без watch.
 - `npm run dev -w server` — запуск API в watch-режиме.
-- `npm run start -w server` — запуск API без watch.
 - `npm test -w server` — integration-тесты API.
 - `npm run db:migrate -w server` — миграции Sequelize.
 - `npm run db:seed -w server` — seed-скрипт.

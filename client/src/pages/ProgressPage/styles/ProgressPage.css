@@ -1,0 +1,9 @@
+.progress-page {
+  display: contents;
+}
+
+.progress-page__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

@@ -1,0 +1,9 @@
+.course-reviews-page {
+  display: contents;
+}
+
+.course-reviews-page__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

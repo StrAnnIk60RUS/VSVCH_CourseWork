@@ -12,7 +12,7 @@ const baseURL = runtimeEnv.process?.env?.API_URL ?? 'http://localhost:4000/api';
 
 export const http = axios.create({
   baseURL,
-  timeout: 15000,
+  timeout: 30000,
 });
 
 http.interceptors.request.use((config) => {

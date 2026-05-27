@@ -1,0 +1,9 @@
+.teacher-course-manage-page {
+  display: contents;
+}
+
+.teacher-course-manage-page__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

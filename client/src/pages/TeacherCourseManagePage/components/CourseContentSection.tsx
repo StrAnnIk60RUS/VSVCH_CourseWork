@@ -1,7 +1,7 @@
 import type * as React from 'react';
-import type { ExerciseEditRow, ExerciseForm, LessonEdit, LessonItem } from './useTeacherCourseManage';
-import { COURSE_LANGUAGE_OPTIONS, COURSE_LEVEL_OPTIONS } from '../../constants/courseOptions';
-import { useI18n } from '../../hooks/useI18n';
+import type { ExerciseEditRow, ExerciseForm, LessonEdit, LessonItem } from '../useTeacherCourseManage';
+import { COURSE_LANGUAGE_OPTIONS, COURSE_LEVEL_OPTIONS } from '../../../constants/courseOptions';
+import { useI18n } from '../../../hooks/useI18n';
 
 type Props = {
   courseForm: { title: string; description: string; language: string; level: string };

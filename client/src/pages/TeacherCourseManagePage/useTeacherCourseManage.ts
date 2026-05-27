@@ -283,7 +283,7 @@ export function useTeacherCourseManage(courseId: string) {
           return;
         }
         const res = await sendReportEmail({ email: userEmail, type: 'course-summary', format: 'pdf', courseId });
-        setStatus(res.message ?? (res.sent ? 'Письмо отправлено' : 'Demo-режим'));
+        setStatus(res.message ?? (res.sent ? 'Письмо отправлено на e-mail' : 'Demo-режим'));
       },
     }),
     [
