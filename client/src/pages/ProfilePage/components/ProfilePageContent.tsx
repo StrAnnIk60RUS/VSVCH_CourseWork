@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { clearUiStorage } from '../../../constants/storage';
 import {
   downloadCertificatePdf,
-  getTeacherAnalytics,
   getTeacherCourses,
   getApiError,
   getMyCertificates,
@@ -22,12 +21,12 @@ type ProfileCertificate = {
 };
 
 type TeacherStats = {
-  courseTitle: string;
-  periodDays: number;
-  students: number;
-  avgProgress: number;
-  activeStudents: number;
-  riskStudents: number;
+  coursesTotal: number;
+  coursesPublished: number;
+  studentsTotal: number;
+  lessonsTotal: number;
+  reviewsTotal: number;
+  avgRating: number;
 };
 
 function formatDate(value: string): string {
@@ -55,21 +54,45 @@ export function ProfilePageContent() {
     const certsPromise = isTeacher ? Promise.resolve({ items: [] as ProfileCertificate[] }) : getMyCertificates();
     const teacherStatsPromise = isTeacher
       ? getTeacherCourses()
-          .then(async (coursesRes) => {
+          .then((coursesRes) => {
             if (coursesRes.items.length === 0) {
               return null;
             }
-            const topCourse = [...coursesRes.items].sort(
-              (a, b) => b.enrollmentCount - a.enrollmentCount,
-            )[0];
-            const analytics = await getTeacherAnalytics(topCourse.id, 7);
+            const coursesTotal = coursesRes.items.length;
+            const coursesPublished = coursesRes.items.filter((course) => course.published).length;
+            const studentsTotal = coursesRes.items.reduce(
+              (sum, course) => sum + (Number(course.enrollmentCount) || 0),
+              0,
+            );
+            const lessonsTotal = coursesRes.items.reduce(
+              (sum, course) => sum + (Number(course.lessonCount) || 0),
+              0,
+            );
+            const reviewsTotal = coursesRes.items.reduce(
+              (sum, course) => sum + (Number(course.reviewCount) || 0),
+              0,
+            );
+            const ratedCourses = coursesRes.items.filter(
+              (course) => course.ratingAverage != null && course.reviewCount > 0,
+            );
+            const avgRating =
+              ratedCourses.length > 0
+                ? Number(
+                    (
+                      ratedCourses.reduce(
+                        (sum, course) => sum + Number(course.ratingAverage ?? 0),
+                        0,
+                      ) / ratedCourses.length
+                    ).toFixed(1),
+                  )
+                : 0;
             return {
-              courseTitle: topCourse.title,
-              periodDays: analytics.periodDays,
-              students: analytics.kpis.students,
-              avgProgress: analytics.kpis.avgProgress,
-              activeStudents: analytics.kpis.activeStudents7d,
-              riskStudents: analytics.kpis.riskStudents,
+              coursesTotal,
+              coursesPublished,
+              studentsTotal,
+              lessonsTotal,
+              reviewsTotal,
+              avgRating,
             } satisfies TeacherStats;
           })
       : Promise.resolve(null);
@@ -127,30 +150,34 @@ export function ProfilePageContent() {
             )}
             {teacherStats && (
               <div className="mt-2 space-y-3">
-                <p className="text-sm text-ui-muted">
-                  {t.profile.teacherStatsCourse}: <span className="font-medium text-ui-text">{teacherStats.courseTitle}</span>
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="rounded border border-ui-border bg-ui-surface p-3">
+                    <p className="text-xs text-ui-muted">{t.profile.teacherCoursesTotal}</p>
+                    <p className="mt-1 text-xl font-semibold text-ui-text">{teacherStats.coursesTotal}</p>
+                  </div>
+                  <div className="rounded border border-ui-border bg-ui-surface p-3">
+                    <p className="text-xs text-ui-muted">{t.profile.teacherCoursesPublished}</p>
+                    <p className="mt-1 text-xl font-semibold text-ui-text">{teacherStats.coursesPublished}</p>
+                  </div>
                   <div className="rounded border border-ui-border bg-ui-surface p-3">
                     <p className="text-xs text-ui-muted">{t.teacherAnalytics.students}</p>
-                    <p className="mt-1 text-xl font-semibold text-ui-text">{teacherStats.students}</p>
+                    <p className="mt-1 text-xl font-semibold text-ui-text">{teacherStats.studentsTotal}</p>
                   </div>
                   <div className="rounded border border-ui-border bg-ui-surface p-3">
-                    <p className="text-xs text-ui-muted">{t.teacherAnalytics.avgProgress}</p>
-                    <p className="mt-1 text-xl font-semibold text-ui-text">{teacherStats.avgProgress}%</p>
+                    <p className="text-xs text-ui-muted">{t.teacherCourses.lessons}</p>
+                    <p className="mt-1 text-xl font-semibold text-ui-text">{teacherStats.lessonsTotal}</p>
                   </div>
                   <div className="rounded border border-ui-border bg-ui-surface p-3">
-                    <p className="text-xs text-ui-muted">
-                      {t.teacherAnalytics.activePeriod} ({teacherStats.periodDays})
+                    <p className="text-xs text-ui-muted">{t.teacherCourses.reviews}</p>
+                    <p className="mt-1 text-xl font-semibold text-ui-text">{teacherStats.reviewsTotal}</p>
+                  </div>
+                  <div className="rounded border border-ui-border bg-ui-surface p-3">
+                    <p className="text-xs text-ui-muted">{t.profile.teacherAverageRating}</p>
+                    <p className="mt-1 text-xl font-semibold text-ui-text">
+                      {teacherStats.avgRating > 0 ? teacherStats.avgRating.toFixed(1) : t.teacherCourses.notAvailable}
                     </p>
-                    <p className="mt-1 text-xl font-semibold text-ui-text">{teacherStats.activeStudents}</p>
-                  </div>
-                  <div className="rounded border border-ui-border bg-ui-surface p-3">
-                    <p className="text-xs text-ui-muted">{t.teacherAnalytics.riskStudents}</p>
-                    <p className="mt-1 text-xl font-semibold text-ui-text">{teacherStats.riskStudents}</p>
                   </div>
                 </div>
-                <p className="text-xs text-ui-muted">{t.teacherAnalytics.riskDefinition}</p>
               </div>
             )}
           </SectionCard>
