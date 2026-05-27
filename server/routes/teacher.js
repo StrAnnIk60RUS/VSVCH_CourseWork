@@ -19,7 +19,7 @@ const courseIdParamSchema = z.object({
 });
 
 const studentsQuerySchema = z.object({
-  status: z.enum(['active', 'inactive']).optional(),
+  status: z.enum(['all', 'active', 'inactive']).default('all'),
   sort: z.enum(['name', 'progress', 'activity']).default('name'),
   order: z.enum(['asc', 'desc']).default('desc'),
 });
@@ -35,8 +35,13 @@ function validationError(message, parsed) {
 }
 
 function toStudentRow(enrollment, lastActivity) {
+  if (!enrollment.user) {
+    return null;
+  }
   const now = Date.now();
-  const lastTs = lastActivity ? new Date(lastActivity).getTime() : new Date(enrollment.createdAt).getTime();
+  const createdTs = new Date(enrollment.createdAt).getTime();
+  const activityTs = lastActivity ? new Date(lastActivity).getTime() : Number.NaN;
+  const lastTs = Number.isFinite(activityTs) ? activityTs : createdTs;
   const active = now - lastTs <= 14 * 24 * 60 * 60 * 1000;
   return {
     userId: enrollment.user.id,
@@ -135,7 +140,9 @@ router.get('/courses/:courseId/students', requireAuth, async (req, res, next) =>
     const userIds = enrollments.map((x) => x.userId);
     const lastByUser = await getLastSubmissionByUserIds(userIds);
 
-    let items = enrollments.map((enr) => toStudentRow(enr, lastByUser[enr.userId]));
+    let items = enrollments
+      .map((enr) => toStudentRow(enr, lastByUser[enr.userId]))
+      .filter((item) => item != null);
     if (status === 'active') {
       items = items.filter((x) => x.active);
     } else if (status === 'inactive') {
