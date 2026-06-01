@@ -33,6 +33,6 @@ $env:PGPASSWORD = "ваш_пароль"
 & "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -h localhost -p 5432 -U postgres -d vsvh_languages --no-owner --no-acl -f database/dumps/vsvh_languages.sql
 ```
 
-Рекомендуется удалить из файла строки `\restrict` / `\unrestrict` (pg_dump 17+) и посторонние схемы, если они появились в локальной БД.
+При обновлении дампа удаляйте из файла строки `\restrict` / `\unrestrict` (pg_dump 18+) и посторонние схемы (например, случайную `SDGSD`), если они появились в локальной БД. В репозитории для сдачи дамп уже очищен.
 
 Тестовые логины после импорта — в разделе «Тестовые учётные записи» в [README.md](../../../README.md).

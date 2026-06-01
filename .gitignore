@@ -29,9 +29,12 @@ lerna-debug.log*
 __pycache__/
 *.pyc
 
-# Word / Enterprise Architect temp and locks
+# Word / Enterprise Architect / thesis artifacts
 ~$*.docx
+*.docx
 *.ldb
+*.eap
+*.eapx
 
 # Caches and tool output
 .cache/
