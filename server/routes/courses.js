@@ -20,6 +20,31 @@ import { REVIEW_MIN_PROGRESS_PERCENT } from '../db/models/constants.js';
 
 const router = Router();
 
+const COURSE_LANGUAGE_LABEL_BY_CODE = {
+  en: 'English',
+  es: 'Spanish',
+  de: 'German',
+  fr: 'French',
+  uk: 'Ukrainian',
+  pl: 'Polish',
+};
+
+const COURSE_LANGUAGE_CODE_BY_LABEL = Object.fromEntries(
+  Object.entries(COURSE_LANGUAGE_LABEL_BY_CODE).map(([code, label]) => [label, code]),
+);
+
+function languageFilterValues(language) {
+  const trimmed = language.trim();
+  const code = COURSE_LANGUAGE_LABEL_BY_CODE[trimmed]
+    ? trimmed
+    : (COURSE_LANGUAGE_CODE_BY_LABEL[trimmed] ?? trimmed);
+  const label = COURSE_LANGUAGE_LABEL_BY_CODE[code];
+  if (label && label !== code) {
+    return [code, label];
+  }
+  return [code];
+}
+
 const createCourseSchema = z.object({
   title: z.string().trim().min(1, 'title is required').max(120, 'title is too long'),
   description: z.string().trim().min(1, 'description is required').max(2000, 'description is too long'),
@@ -243,7 +268,8 @@ router.get('/', async (req, res, next) => {
     /** @type {import('sequelize').WhereOptions} */
     const where = { published: true };
     if (language) {
-      where.language = language;
+      const variants = languageFilterValues(language);
+      where.language = variants.length === 1 ? variants[0] : { [Op.in]: variants };
     }
     if (level) {
       where.level = level;
