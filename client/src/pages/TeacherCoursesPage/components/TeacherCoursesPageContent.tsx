@@ -1,23 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { deleteCourse, getApiError, getTeacherCourses } from '../../../api';
-import { COURSE_LANGUAGE_OPTIONS } from '../../../constants/courseOptions';
+import { formatCourseLanguage } from '../../../constants/courseOptions';
 import { NavigationUp, PageShell, SectionCard } from '../../../components/layout';
 import { useI18n } from '../../../hooks/useI18n';
 import { useToast } from '../../../hooks/useToast';
-
-const LANGUAGE_LABELS: Record<string, (typeof COURSE_LANGUAGE_OPTIONS)[number]> = {
-  en: 'English',
-  es: 'Spanish',
-  de: 'German',
-  fr: 'French',
-  uk: 'Ukrainian',
-  pl: 'Polish',
-};
-
-function formatLanguage(language: string) {
-  return LANGUAGE_LABELS[language] ?? language;
-}
 
 export function TeacherCoursesPageContent() {
   const t = useI18n();
@@ -82,7 +69,7 @@ export function TeacherCoursesPageContent() {
                 <div>
                   <p className="font-medium text-ui-text">{item.title}</p>
                   <p className="text-sm text-ui-muted">
-                    {formatLanguage(item.language)} • {item.level} • {t.teacherCourses.lessons}{' '}
+                    {formatCourseLanguage(item.language)} • {item.level} • {t.teacherCourses.lessons}{' '}
                     {item.lessonCount} • {t.teacherCourses.students} {item.enrollmentCount} •{' '}
                     {t.teacherCourses.rating}{' '}
                     {item.reviewCount > 0 && item.ratingAverage != null

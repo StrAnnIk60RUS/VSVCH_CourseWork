@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import type { ExerciseEditRow, ExerciseForm, LessonEdit, LessonItem } from '../useTeacherCourseManage';
-import { COURSE_LANGUAGE_OPTIONS, COURSE_LEVEL_OPTIONS } from '../../../constants/courseOptions';
+import { COURSE_LANGUAGES, COURSE_LEVEL_OPTIONS } from '../../../constants/courseOptions';
 import { useI18n } from '../../../hooks/useI18n';
 
 type Props = {
@@ -81,9 +81,9 @@ export function CourseContentSection(props: Props) {
           className="ui-input rounded px-3 py-2"
           aria-label={t.teacherContent.language}
         >
-          {COURSE_LANGUAGE_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              {option}
+          {COURSE_LANGUAGES.map((option) => (
+            <option key={option.code} value={option.code}>
+              {option.label}
             </option>
           ))}
         </select>

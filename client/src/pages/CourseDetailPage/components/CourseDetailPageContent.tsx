@@ -12,6 +12,7 @@ import {
   unenrollFromCourse,
   upsertCourseReview,
 } from '../../../api';
+import { formatCourseLanguage } from '../../../constants/courseOptions';
 import { NavigationUp, PageShell, SectionCard } from '../../../components/layout';
 import { useAuthSession } from '../../../hooks/useAuthSession';
 import { useI18n } from '../../../hooks/useI18n';
@@ -222,7 +223,7 @@ export function CourseDetailPageContent() {
           {!isLoading && !error && !course && <p className="mt-2 text-sm text-ui-muted">{t.courseDetail.notFound}</p>}
           {!isLoading && course && (
             <p className="mt-2 text-sm">
-              {course.language} • {course.level} • {t.courseDetail.ratingWord} {course.ratingAverage ?? t.courseDetail.na} (
+              {formatCourseLanguage(course.language)} • {course.level} • {t.courseDetail.ratingWord} {course.ratingAverage ?? t.courseDetail.na} (
               {course.reviewCount})
             </p>
           )}

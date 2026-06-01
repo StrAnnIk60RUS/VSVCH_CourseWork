@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getApiError, getCourses } from '../../../api';
-import { COURSE_LANGUAGE_OPTIONS, COURSE_LEVEL_OPTIONS } from '../../../constants/courseOptions';
+import {
+  COURSE_LANGUAGES,
+  COURSE_LEVEL_OPTIONS,
+  formatCourseLanguage,
+  normalizeCourseLanguageCode,
+} from '../../../constants/courseOptions';
 import { NavigationUp, PageShell, SectionCard } from '../../../components/layout';
 import { useI18n } from '../../../hooks/useI18n';
 import { STORAGE_KEYS } from '../../../constants/storage';
@@ -27,14 +32,18 @@ export function CoursesPageContent() {
   const [filters, setFilters] = useState<CatalogFilters>(() => {
     if (searchParams.toString()) {
       return {
-        language: searchParams.get('language') ?? '',
+        language: normalizeCourseLanguageCode(searchParams.get('language') ?? ''),
         level: searchParams.get('level') ?? '',
         search: searchParams.get('search') ?? '',
         minRating: searchParams.get('minRating') ?? '',
       };
     }
     const raw = localStorage.getItem(STORAGE_KEYS.catalogFilters);
-    return raw ? ({ ...defaultFilters, ...JSON.parse(raw) } as CatalogFilters) : defaultFilters;
+    if (raw) {
+      const saved = JSON.parse(raw) as CatalogFilters;
+      return { ...defaultFilters, ...saved, language: normalizeCourseLanguageCode(saved.language) };
+    }
+    return defaultFilters;
   });
   const [sort, setSort] = useState(() => {
     const sortParam = searchParams.get('sort');
@@ -113,9 +122,9 @@ export function CoursesPageContent() {
               className="ui-input rounded px-3 py-2"
             >
               <option value="">{t.courses.languagePlaceholder}</option>
-              {COURSE_LANGUAGE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
+              {COURSE_LANGUAGES.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.label}
                 </option>
               ))}
             </select>
@@ -173,7 +182,7 @@ export function CoursesPageContent() {
                 <h3 className="font-semibold text-ui-text">{item.title}</h3>
                 <p className="text-sm text-ui-muted">{item.description}</p>
                 <p className="mt-2 text-xs text-ui-muted">
-                  {item.language} • {item.level} • {t.courses.lessonsLabel}: {item.lessonCount} •{' '}
+                  {formatCourseLanguage(item.language)} • {item.level} • {t.courses.lessonsLabel}: {item.lessonCount} •{' '}
                   {t.courses.sortRating}: {item.ratingAverage ?? t.courseDetail.na} ({item.reviewCount})
                 </p>
                 <Link
