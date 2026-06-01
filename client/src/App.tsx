@@ -98,10 +98,15 @@ export default function App() {
 
   useEffect(() => {
     let isMounted = true;
+
+    setDueNotifications([]);
+    notifiedReminderIdsRef.current.clear();
+
+    if (!user?.id || !readAccessToken()) {
+      return;
+    }
+
     const pollDueReminders = async () => {
-      if (!readAccessToken()) {
-        return;
-      }
       try {
         const response = await getReminders();
         if (!isMounted) {
@@ -135,15 +140,15 @@ export default function App() {
       isMounted = false;
       window.clearInterval(intervalId);
     };
-  }, []);
+  }, [user?.id]);
 
   const dismissNotification = async (id: string) => {
+    notifiedReminderIdsRef.current.delete(id);
+    setDueNotifications((prev) => prev.filter((item) => item.id !== id));
     try {
       await deleteReminder(id);
-      notifiedReminderIdsRef.current.delete(id);
-      setDueNotifications((prev) => prev.filter((item) => item.id !== id));
     } catch {
-      // Ignore deletion errors here to avoid noisy UX in global app shell.
+      // Banner is already hidden; ignore stale or foreign reminders after account switch.
     }
   };
 
