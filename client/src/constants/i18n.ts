@@ -314,6 +314,7 @@ type Dictionary = {
     addPoints: string;
     addExercise: string;
     addPending: string;
+    markdownHint: string;
   };
   teacherStudents: {
     all: string;
@@ -721,6 +722,7 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       addPoints: 'Баллы (maxScore)',
       addExercise: 'Добавить упражнение в урок',
       addPending: 'Добавление...',
+      markdownHint: 'Поддерживается Markdown: заголовки, списки, **жирный**, *курсив*, `код`, ссылки.',
     },
     teacherStudents: {
       all: 'Все',
@@ -1126,6 +1128,7 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       addPoints: 'Points (maxScore)',
       addExercise: 'Add exercise to lesson',
       addPending: 'Adding...',
+      markdownHint: 'Markdown supported: headings, lists, **bold**, *italic*, `code`, links.',
     },
     teacherStudents: {
       all: 'All',

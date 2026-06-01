@@ -23,6 +23,7 @@ import {
 
 } from '../../../api';
 
+import { MarkdownContent } from '../../../components/common';
 import { NavigationUp, PageShell, SectionCard } from '../../../components/layout';
 import { useAuthSession } from '../../../hooks/useAuthSession';
 import { useI18n } from '../../../hooks/useI18n';
@@ -36,6 +37,8 @@ type ExerciseItem = {
   title: string;
 
   maxScore?: number;
+
+  question?: string;
 
   payload?: { question?: string; maxScore?: number };
 
@@ -509,9 +512,7 @@ export function LessonPageContent() {
           <div className="mt-2 rounded border border-ui-border bg-ui-subtle p-3">
 
             {lessonMeta?.content?.trim() ? (
-
-              <p className="whitespace-pre-wrap text-sm text-ui-text">{lessonMeta.content}</p>
-
+              <MarkdownContent content={lessonMeta.content} />
             ) : (
 
               <p className="text-sm text-ui-muted">{t.lesson.noTheory}</p>
@@ -608,6 +609,8 @@ export function LessonPageContent() {
 
 
 
+              const questionText = ex.question ?? ex.payload?.question ?? '';
+
               return (
 
                 <div
@@ -620,7 +623,11 @@ export function LessonPageContent() {
 
                   <p className="font-medium">{ex.title}</p>
 
-                  <p className="text-sm text-ui-muted">{ex.payload?.question ?? t.lesson.questionMissing}</p>
+                  {questionText.trim() ? (
+                    <MarkdownContent content={questionText} className="text-ui-muted" />
+                  ) : (
+                    <p className="text-sm text-ui-muted">{t.lesson.questionMissing}</p>
+                  )}
 
                   {showAnswerLine && (
 

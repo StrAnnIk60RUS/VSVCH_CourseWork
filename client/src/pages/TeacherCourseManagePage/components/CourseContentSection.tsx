@@ -112,22 +112,26 @@ export function CourseContentSection(props: Props) {
       </form>
 
       <form
-        className="mb-3 grid gap-2 rounded border border-ui-border bg-ui-surface p-3 md:grid-cols-3"
+        className="mb-3 space-y-2 rounded border border-ui-border bg-ui-surface p-3"
         onSubmit={async (e) => {
           e.preventDefault();
           await onCreateLesson();
         }}
       >
-        <input value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} className="ui-input rounded px-3 py-2" placeholder={t.teacherContent.lessonTitle} />
-        <input
+        <div className="grid gap-2 md:grid-cols-[1fr_auto]">
+          <input value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} className="ui-input rounded px-3 py-2" placeholder={t.teacherContent.lessonTitle} />
+          <button type="submit" className="ui-btn-primary" disabled={busyAction === 'lesson-create'}>
+            {busyAction === 'lesson-create' ? t.teacherContent.createPending : t.teacherContent.addLesson}
+          </button>
+        </div>
+        <textarea
           value={lessonContent}
           onChange={(e) => setLessonContent(e.target.value)}
-          className="ui-input rounded px-3 py-2"
+          className="ui-input w-full rounded px-3 py-2 font-mono text-sm"
           placeholder={t.teacherContent.lessonContentOptional}
+          rows={5}
         />
-        <button type="submit" className="ui-btn-primary" disabled={busyAction === 'lesson-create'}>
-          {busyAction === 'lesson-create' ? t.teacherContent.createPending : t.teacherContent.addLesson}
-        </button>
+        <p className="text-xs text-ui-muted">{t.teacherContent.markdownHint}</p>
       </form>
 
       <ul className="space-y-2">
@@ -181,10 +185,11 @@ export function CourseContentSection(props: Props) {
                     },
                   }))
                 }
-                className="ui-input rounded px-2 py-1 text-sm md:col-span-2"
+                className="ui-input rounded px-2 py-1 font-mono text-sm md:col-span-2"
                 placeholder={t.teacherContent.lessonContent}
-                rows={2}
+                rows={5}
               />
+              <p className="text-xs text-ui-muted md:col-span-2">{t.teacherContent.markdownHint}</p>
             </div>
             <div className="mt-3 space-y-2">
               {(exerciseMap[lesson.id] ?? []).map((exercise) => {
@@ -222,7 +227,7 @@ export function CourseContentSection(props: Props) {
                         className="ui-input rounded px-2 py-1"
                         placeholder={t.teacherContent.points}
                       />
-                      <input
+                      <textarea
                         value={row.question}
                         onChange={(e) =>
                           setExerciseEdits((prev) => ({
@@ -230,9 +235,11 @@ export function CourseContentSection(props: Props) {
                             [exercise.id]: { ...row, question: e.target.value },
                           }))
                         }
-                        className="ui-input rounded px-2 py-1 md:col-span-2"
+                        className="ui-input rounded px-2 py-1 font-mono md:col-span-2"
                         placeholder={t.teacherContent.question}
+                        rows={3}
                       />
+                      <p className="text-xs text-ui-muted md:col-span-2">{t.teacherContent.markdownHint}</p>
                       <input
                         value={row.correctAnswer}
                         onChange={(e) =>
@@ -295,7 +302,7 @@ export function CourseContentSection(props: Props) {
                   className="ui-input rounded px-2 py-1"
                   placeholder={t.teacherContent.addPoints}
                 />
-                <input
+                <textarea
                   value={exerciseForms[lesson.id]?.question ?? ''}
                   onChange={(e) =>
                     setExerciseForms((prev) => ({
@@ -303,9 +310,11 @@ export function CourseContentSection(props: Props) {
                       [lesson.id]: { ...(prev[lesson.id] ?? { title: '', question: '', correctAnswer: '', maxScore: '10' }), question: e.target.value },
                     }))
                   }
-                  className="ui-input rounded px-2 py-1"
+                  className="ui-input rounded px-2 py-1 font-mono md:col-span-2"
                   placeholder={t.teacherContent.question}
+                  rows={3}
                 />
+                <p className="text-xs text-ui-muted md:col-span-2">{t.teacherContent.markdownHint}</p>
                 <input
                   value={exerciseForms[lesson.id]?.correctAnswer ?? ''}
                   onChange={(e) =>
