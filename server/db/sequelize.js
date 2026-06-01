@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import '../loadEnv.js';
 import { Sequelize } from 'sequelize';
 
 if (!process.env.DATABASE_URL) {
