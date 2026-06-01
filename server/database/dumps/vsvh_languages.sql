@@ -2,8 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict 6ocCKcGsgYcziJkOswbWseeZWBcnOLS9zHTcinMy3bFFbBcv5kdX9OUEyum8bEz
-
 -- Dumped from database version 18.3
 -- Dumped by pg_dump version 18.3
 
@@ -20,16 +18,6 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
-
---
--- TOC entry 30 (class 2615 OID 33674)
--- Name: SDGSD; Type: SCHEMA; Schema: -; Owner: postgres
---
-
-CREATE SCHEMA "SDGSD";
-
-
-ALTER SCHEMA "SDGSD" OWNER TO postgres;
 
 --
 -- TOC entry 902 (class 1247 OID 32848)
@@ -1327,6 +1315,4 @@ ALTER TABLE ONLY public.user_roles
 --
 -- PostgreSQL database dump complete
 --
-
-\unrestrict 6ocCKcGsgYcziJkOswbWseeZWBcnOLS9zHTcinMy3bFFbBcv5kdX9OUEyum8bEz
 
