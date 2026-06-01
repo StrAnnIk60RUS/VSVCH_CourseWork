@@ -19,7 +19,7 @@ const courseIdParamSchema = z.object({
 });
 
 const studentsQuerySchema = z.object({
-  status: z.enum(['active', 'inactive']).optional(),
+  status: z.enum(['all', 'active', 'inactive']).default('all'),
   sort: z.enum(['name', 'progress', 'activity']).default('name'),
   order: z.enum(['asc', 'desc']).default('desc'),
 });
@@ -34,17 +34,31 @@ function validationError(message, parsed) {
   };
 }
 
+function parseTimestamp(value) {
+  if (value == null || value === '') {
+    return null;
+  }
+  const ts = new Date(value).getTime();
+  return Number.isFinite(ts) ? ts : null;
+}
+
 function toStudentRow(enrollment, lastActivity) {
+  if (!enrollment.user) {
+    return null;
+  }
   const now = Date.now();
-  const lastTs = lastActivity ? new Date(lastActivity).getTime() : new Date(enrollment.createdAt).getTime();
+  const enrolledAtRaw = enrollment.createdAt ?? enrollment.get?.('created_at');
+  const enrolledTs = parseTimestamp(enrolledAtRaw);
+  const activityTs = parseTimestamp(lastActivity);
+  const lastTs = activityTs ?? enrolledTs ?? now;
   const active = now - lastTs <= 14 * 24 * 60 * 60 * 1000;
   return {
     userId: enrollment.user.id,
     name: enrollment.user.name,
     email: enrollment.user.email,
     progress: enrollment.progress,
-    enrolledAt: enrollment.createdAt,
-    lastActivity: new Date(lastTs).toISOString(),
+    enrolledAt: safeIsoDate(enrolledAtRaw, new Date(now).toISOString()),
+    lastActivity: safeIsoDate(lastTs, new Date(now).toISOString()),
     active,
   };
 }
@@ -135,7 +149,9 @@ router.get('/courses/:courseId/students', requireAuth, async (req, res, next) =>
     const userIds = enrollments.map((x) => x.userId);
     const lastByUser = await getLastSubmissionByUserIds(userIds);
 
-    let items = enrollments.map((enr) => toStudentRow(enr, lastByUser[enr.userId]));
+    let items = enrollments
+      .map((enr) => toStudentRow(enr, lastByUser[enr.userId]))
+      .filter((item) => item != null);
     if (status === 'active') {
       items = items.filter((x) => x.active);
     } else if (status === 'inactive') {

@@ -80,3 +80,19 @@ $RECYCLE.BIN/
 *.njsproj
 *.sln
 *.sw?
+
+# Submission / archives (do not commit handoff zips)
+*.zip
+
+# Thesis and internal docs (not required to run the app)
+docs/
+docs/5-opisanie-testovogo-primera.md
+postman/
+scripts/
+scripts/capture-pz-screenshots.mjs
+*_ПЗ.docx
+СВЧ_ПЗ.docx
+
+# Playwright (only for local screenshot capture)
+playwright-report/
+test-results/

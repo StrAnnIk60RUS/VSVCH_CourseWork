@@ -15,6 +15,7 @@ import {
   updateExercise,
   updateLesson,
 } from '../../api';
+import { normalizeCourseLanguageCode } from '../../constants/courseOptions';
 import { useAuthSession } from '../../hooks/useAuthSession';
 
 export type CourseForm = { title: string; description: string; language: string; level: string };
@@ -48,7 +49,7 @@ export function useTeacherCourseManage(courseId: string) {
     const nextCourse = {
       title: res.title,
       description: res.description ?? '',
-      language: res.language ?? '',
+      language: normalizeCourseLanguageCode(res.language ?? ''),
       level: res.level ?? '',
       lessons: res.lessons,
     };

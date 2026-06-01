@@ -126,6 +126,9 @@ type Dictionary = {
     teacherMiniStats: string;
     teacherStatsCourse: string;
     teacherStatsNoCourses: string;
+    teacherCoursesTotal: string;
+    teacherCoursesPublished: string;
+    teacherAverageRating: string;
   };
   progress: {
     pageTitle: string;
@@ -311,6 +314,7 @@ type Dictionary = {
     addPoints: string;
     addExercise: string;
     addPending: string;
+    markdownHint: string;
   };
   teacherStudents: {
     all: string;
@@ -527,9 +531,12 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       certificatesEmpty: 'Сертификатов пока нет.',
       downloadPdf: 'Скачать PDF',
       certificateDownloaded: 'Сертификат скачан.',
-      teacherMiniStats: 'Мини-статистика за 7 дней',
+      teacherMiniStats: 'Общая статистика по курсам',
       teacherStatsCourse: 'Курс для статистики',
       teacherStatsNoCourses: 'У вас пока нет курсов для отображения статистики.',
+      teacherCoursesTotal: 'Всего курсов',
+      teacherCoursesPublished: 'Опубликовано курсов',
+      teacherAverageRating: 'Средний рейтинг курсов',
     },
     progress: {
       pageTitle: 'Прогресс',
@@ -715,6 +722,7 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       addPoints: 'Баллы (maxScore)',
       addExercise: 'Добавить упражнение в урок',
       addPending: 'Добавление...',
+      markdownHint: 'Поддерживается Markdown: заголовки, списки, **жирный**, *курсив*, `код`, ссылки.',
     },
     teacherStudents: {
       all: 'Все',
@@ -929,9 +937,12 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       certificatesEmpty: 'No certificates yet.',
       downloadPdf: 'Download PDF',
       certificateDownloaded: 'Certificate downloaded.',
-      teacherMiniStats: 'Mini stats for 7 days',
+      teacherMiniStats: 'Overall courses statistics',
       teacherStatsCourse: 'Course for stats',
       teacherStatsNoCourses: 'You have no courses yet to show statistics.',
+      teacherCoursesTotal: 'Total courses',
+      teacherCoursesPublished: 'Published courses',
+      teacherAverageRating: 'Average course rating',
     },
     progress: {
       pageTitle: 'Progress',
@@ -1117,6 +1128,7 @@ export const I18N_DICTIONARY: Record<UiLanguage, Dictionary> = {
       addPoints: 'Points (maxScore)',
       addExercise: 'Add exercise to lesson',
       addPending: 'Adding...',
+      markdownHint: 'Markdown supported: headings, lists, **bold**, *italic*, `code`, links.',
     },
     teacherStudents: {
       all: 'All',

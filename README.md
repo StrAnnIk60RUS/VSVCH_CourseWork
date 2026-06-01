@@ -1,144 +1,166 @@
-ссылка на пояснительную записку: https://docs.google.com/document/d/1iSMOjudZBcrbYLR3tI3zkAW9VEBISXcUmdXitatBgvE/edit?usp=sharing
+# VSVH Languages
 
-Веб-платформа для изучения языков с двумя основными ролями: студент и преподаватель.  
-Проект объединяет клиент на React и API на Express + PostgreSQL в одном репозитории и покрывает ключевые сценарии: каталог курсов, обучение, прогресс, аналитика преподавателя, отчёты и напоминания.
+Веб-платформа для изучения иностранных языков (роли: **студент**, **преподаватель**, гость).  
+Клиент: React + TypeScript + Webpack. Сервер: Node.js + Express + PostgreSQL (Sequelize).
 
-## Ключевые возможности
+Данный репозиторий содержит всё необходимое для локального запуска и проверки работы приложения.
 
-### Студент
-- Регистрация/вход, просмотр каталога и карточек курсов.
-- Запись на курс, прохождение уроков и отправка ответов на упражнения.
-- Отслеживание прогресса и история активности.
-- Работа с избранным и напоминаниями.
-- Формирование отчётов о прогрессе (PDF/DOCX) и отправка на e-mail (при наличии SMTP).
+## Требования
 
-### Преподаватель
-- Создание и управление своими курсами.
-- CRUD для уроков и упражнений в своих курсах.
-- Аналитика студентов по курсу: прогресс, активность, фильтры и сортировка.
-- Экспорт списка студентов в CSV.
-- Формирование сводных отчётов по курсу (PDF/DOCX) и отправка на e-mail.
+| Компонент | Версия |
+|-----------|--------|
+| **Node.js** | 22.15.0 или выше — https://nodejs.org |
+| **npm** | поставляется с Node.js |
+| **PostgreSQL** | 18.1 или выше — https://www.postgresql.org/download/ |
+| **pgAdmin 4** | для импорта SQL-дампа — https://www.pgadmin.org/download/ |
+| **Браузер** | Google Chrome, Mozilla Firefox или Microsoft Edge |
 
-### Гость
-- Публичный просмотр каталога и карточек курсов.
-
-## Технологический стек
-
-- **Frontend**: React, TypeScript, React Router, Redux Toolkit, Webpack, Tailwind CSS.
-- **Backend**: Node.js, Express, Sequelize, JWT, Zod.
-- **Database**: PostgreSQL.
-- **Отчёты и сервисы**: PDFKit, docx, Nodemailer.
+Рекомендуется **Visual Studio Code** — https://code.visualstudio.com
 
 ## Структура репозитория
 
 ```text
 VSVH/
-├─ client/          # React-приложение (Webpack)
-├─ server/          # Express API + Sequelize + миграции/seed
-├─ docs/            # функциональные требования и карта страниц
-├─ postman/         # генерация и окружение Postman-коллекции API
-├─ package.json     # npm workspaces (client, server)
-└─ README.md
+├─ client/                              # React-приложение
+├─ server/                              # Express API
+│  ├─ env.example                       # образец конфигурации (скопировать в .env)
+│  └─ database/dumps/vsvh_languages.sql # дамп БД (схема + демо-данные)
+├─ package.json                         # npm workspaces (client + server)
+├─ package-lock.json
+└─ README.md                            # данная инструкция
 ```
 
-## Быстрый старт
+## Получение исходного кода
 
-Подробное руководство для проверяющего (ПЗ, раздел 4): [`docs/4-rukovodstvo-sistemnogo-programmista.md`](docs/4-rukovodstvo-sistemnogo-programmista.md) (импорт дампа `server/database/dumps/vsvh_languages.sql`, запуск `npm start` в `server/` и `client/`).
+1. Откройте репозиторий на GitHub.
+2. Нажмите **Code → Download ZIP** и распакуйте архив  
+   **или** выполните `git clone <URL-репозитория>`.
 
-### 1) Требования
+## Установка и запуск (для проверяющего)
 
-- Node.js LTS (рекомендуется 20+)
-- npm
-- PostgreSQL
+### 1. Установить зависимости
 
-### 2) Установка зависимостей
-
-Из корня репозитория:
+В корневой папке проекта (где лежит `package.json`):
 
 ```bash
 npm install
 ```
 
-### 3) Настройка окружения сервера
+Команда устанавливает зависимости и клиента, и сервера (npm workspaces).
 
-В папке `server` создайте `.env` на основе `server/env.example`.
+### 2. Подготовить базу данных PostgreSQL
 
-Минимально необходимые переменные:
+1. Создайте пустую базу данных с именем **`vsvh_languages`** (кодировка UTF8).
+2. Импортируйте SQL-дамп:
+   - файл: `server/database/dumps/vsvh_languages.sql`;
+   - в **pgAdmin 4**: правый щелчок по БД → **Query Tool** → **Open File** → выбрать файл → **Execute** (F5);
+   - из командной строки (если `psql` в PATH):
+
+     ```bash
+     psql -U postgres -d vsvh_languages -f server/database/dumps/vsvh_languages.sql
+     ```
+
+3. После успешного импорта **не выполняйте** `npm run db:seed` — дамп уже содержит схему и демонстрационные данные.
+
+### 3. Настроить `server/.env`
+
+1. Скопируйте `server/env.example` в `server/.env`.
+2. В файле `server/.env` укажите строку подключения к вашей БД в переменной **`DATABASE_URL`** (логин и пароль PostgreSQL внутри URI):
 
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/vsvh_languages?schema=public"
+DATABASE_URL="postgresql://postgres:ваш_пароль@localhost:5432/vsvh_languages?schema=public"
 JWT_SECRET="change-me-in-production"
+JWT_EXPIRES_IN=7d
 PORT=4000
 CLIENT_ORIGIN="http://localhost:5173"
 ```
 
-### 4) Миграции и seed данных
+Имя базы в `DATABASE_URL` должно совпадать с созданной БД: **`vsvh_languages`**.
 
-Схема PostgreSQL описана в [`docs/DATABASE.md`](docs/DATABASE.md); SQL-источник — `server/database/migrations/init-schema.sql`. История БД ведётся через Sequelize migrations в `server/database/migrations`: начальная миграция применяет `init-schema.sql`, последующие миграции фиксируют изменения схемы.
+Переменные `SMTP_*` можно оставить пустыми — отправка отчётов на e-mail для локальной проверки не обязательна.
 
-Из корня репозитория:
+### 4. Запустить приложение
+
+**Вариант А — два терминала (рекомендуется для проверки):**
+
+Терминал 1 — API:
+
+```bash
+cd server
+npm start
+```
+
+В консоли: `API http://localhost:4000`.
+
+Терминал 2 — клиент:
+
+```bash
+cd client
+npm start
+```
+
+**Вариант Б — один терминал из корня:**
+
+```bash
+npm run dev
+```
+
+### 5. Открыть в браузере
+
+- **Клиент (интерфейс):** http://localhost:5173  
+- **API:** http://localhost:4000  
+- **Проверка API:** http://localhost:4000/api/health  
+
+## Тестовые учётные записи
+
+После импорта дампа `vsvh_languages.sql` используйте готовые логины (страница входа: **/login**).
+
+### Преподаватель
+
+| Поле | Значение |
+|------|----------|
+| Email | `elena.morozova@vsvh.demo` |
+| Пароль | `PrepVsvh2026!` |
+| Разделы | `/teacher/courses`, `/teacher/analytics` |
+
+### Студент
+
+| Поле | Значение |
+|------|----------|
+| Email | `ivan.volkov@vsvh.demo` |
+| Пароль | `StudVsvh2026!` |
+| Разделы | `/courses`, `/me/learning`, `/me/progress` |
+
+Гостевой просмотр каталога курсов доступен без авторизации.
+
+## Типичные ошибки
+
+| Симптом | Причина | Решение |
+|---------|---------|---------|
+| Ошибка подключения к БД | Неверный `DATABASE_URL` или PostgreSQL не запущен | Проверить службу PostgreSQL и параметры в `server/.env` |
+| Пустой каталог курсов | Дамп не импортирован | Повторить импорт `vsvh_languages.sql` в БД `vsvh_languages` |
+| Ошибки при `npm run db:seed` | Данные уже загружены дампом | Не запускать seed после импорта дампа |
+| Страница не открывается | Неверный порт (например, 3000) | Использовать **http://localhost:5173** |
+| `EADDRINUSE` | Порт 4000 или 5173 занят | Завершить предыдущий процесс `npm start` / `npm run dev` |
+| CORS / блокировка запросов | Неверный `CLIENT_ORIGIN` | В `.env`: `CLIENT_ORIGIN="http://localhost:5173"` |
+
+## Альтернатива: БД без дампа (для разработчиков)
+
+Если дамп недоступен, из корня проекта:
 
 ```bash
 npm run db:migrate
 npm run db:seed
 ```
 
-### 5) Запуск приложения
+После сида в консоли выводятся те же тестовые логины и пароли.
 
-Запуск клиента и сервера одновременно (из корня):
+## Скрипты (кратко)
 
-```bash
-npm run dev
-```
-
-По умолчанию:
-- клиент: `http://localhost:5173`
-- API: `http://localhost:4000`
-- healthcheck: `GET /api/health`
-
-## Скрипты
-
-### Корень репозитория
-- `npm run dev` — параллельный запуск `client` и `server`.
-- `npm run build` — production-сборка клиента.
-- `npm run lint` — ESLint для клиента.
-- `npm run db:migrate` — миграции БД (`server`).
-- `npm run db:migrate:undo` — откат последней миграции.
-- `npm run db:seed` — заполнение БД тестовыми данными.
-
-### Client (`client/package.json`)
-- `npm start` (в каталоге `client/`) или `npm start -w client` — webpack dev server.
-- `npm run dev -w client` — то же, что `npm start` (алиас для обратной совместимости).
-- `npm run build -w client` — `tsc --noEmit` + production build.
-- `npm run lint -w client` — ESLint.
-
-### Server (`server/package.json`)
-- `npm start` (в каталоге `server/`) или `npm start -w server` — запуск API без watch.
-- `npm run dev -w server` — запуск API в watch-режиме.
-- `npm test -w server` — integration-тесты API.
-- `npm run db:migrate -w server` — миграции Sequelize.
-- `npm run db:seed -w server` — seed-скрипт.
-
-## API и документация
-
-- Функциональные требования и критерии приёмки: [`docs/FUNCTIONAL_REQUIREMENTS.md`](docs/FUNCTIONAL_REQUIREMENTS.md)
-- Схема базы данных (PostgreSQL): [`docs/DATABASE.md`](docs/DATABASE.md)
-- Карта страниц и пользовательских сценариев: [`docs/PAGES_AND_FEATURES.md`](docs/PAGES_AND_FEATURES.md)
-- Архитектура и pre-project документы: [`docs/preproject/03-architecture-and-api.md`](docs/preproject/03-architecture-and-api.md)
-
-## Текущее состояние
-
-- Backend API и схема данных реализованы и документированы.
-- Frontend структура и основные страницы присутствуют, развитие UI ведётся итерационно.
-- Почтовые отчёты работают в реальном режиме при настроенном SMTP; без SMTP используется демо-поведение.
-
-## Workflow разработки
-
-- Основная ветка: `main`.
-- Ветка под задачу: `feature/<name>`.
-- Перед PR рекомендуется:
-  - проверить линт: `npm run lint`
-  - проверить сборку: `npm run build`
-  - при изменениях схемы БД обновить `init-schema.sql`, миграцию, модели Sequelize, seed и [`docs/DATABASE.md`](docs/DATABASE.md) (и при необходимости `FUNCTIONAL_REQUIREMENTS.md` §5).
-
-Формат коммитов: Conventional Commits (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`).
+| Команда (из корня) | Назначение |
+|--------------------|------------|
+| `npm install` | Установка зависимостей |
+| `npm run dev` | Клиент + сервер одновременно |
+| `npm run build` | Production-сборка клиента |
+| `npm run db:migrate` | Миграции Sequelize |
+| `npm run db:seed` | Тестовые данные (только без импорта дампа) |

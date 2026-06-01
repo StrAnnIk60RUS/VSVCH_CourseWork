@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getApiError, getFavorites, removeFavorite } from '../../../api';
+import { formatCourseLanguage } from '../../../constants/courseOptions';
 import { PageShell, SectionCard } from '../../../components/layout';
 import { useI18n } from '../../../hooks/useI18n';
 
@@ -29,7 +30,7 @@ export function FavoritesPageContent() {
                 <div>
                   <p className="font-medium">{item.course.title}</p>
                   <p className="text-sm text-ui-muted">
-                    {item.course.language} • {item.course.level}
+                    {formatCourseLanguage(item.course.language)} • {item.course.level}
                   </p>
                 </div>
                 <div className="flex gap-2">

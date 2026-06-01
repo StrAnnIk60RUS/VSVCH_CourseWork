@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getApiError, getCourses } from '../../../api';
+import { formatCourseLanguage } from '../../../constants/courseOptions';
 import { SectionCard } from '../../../components/layout';
 import { useAuthSession } from '../../../hooks/useAuthSession';
 import { useI18n } from '../../../hooks/useI18n';
@@ -168,7 +169,7 @@ export function HomePageContent() {
                     <h3 className="font-medium text-ui-text">{item.title}</h3>
                     <p className="mt-1 text-sm text-ui-muted">{item.description}</p>
                     <p className="mt-2 text-xs text-ui-muted">
-                      {item.language} • {item.level} • {t.home.lessonsLabel}: {item.lessonCount}
+                      {formatCourseLanguage(item.language)} • {item.level} • {t.home.lessonsLabel}: {item.lessonCount}
                     </p>
                     <Link className="ui-link-anim mt-3 inline-block text-sm text-ui-link" to={`/courses/${item.id}`}>
                       {t.home.openCourse}

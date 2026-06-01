@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createCourse, getApiError } from '../../../api';
-import { COURSE_LANGUAGE_OPTIONS, COURSE_LEVEL_OPTIONS } from '../../../constants/courseOptions';
+import { COURSE_LANGUAGES, COURSE_LEVEL_OPTIONS } from '../../../constants/courseOptions';
 import { NavigationUp, PageShell, SectionCard } from '../../../components/layout';
 import { useI18n } from '../../../hooks/useI18n';
 
@@ -10,7 +10,7 @@ export function TeacherCourseNewPageContent() {
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [language, setLanguage] = useState('English');
+  const [language, setLanguage] = useState('en');
   const [level, setLevel] = useState('A1');
   const [status, setStatus] = useState('');
 
@@ -48,9 +48,9 @@ export function TeacherCourseNewPageContent() {
               onChange={(e) => setLanguage(e.target.value)}
               className="ui-input rounded px-3 py-2"
             >
-              {COURSE_LANGUAGE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
+              {COURSE_LANGUAGES.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.label}
                 </option>
               ))}
             </select>
