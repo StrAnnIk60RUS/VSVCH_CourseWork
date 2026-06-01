@@ -261,9 +261,13 @@ async function sendEmailWithAttachment(
   metadata,
 ) {
   const t = REPORT_I18N[locale] ?? REPORT_I18N.en;
-  const hasSmtp = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+  const hasSmtp = Boolean(
+    process.env.SMTP_HOST?.trim() &&
+      process.env.SMTP_USER?.trim() &&
+      process.env.SMTP_PASS?.trim(),
+  );
   if (!hasSmtp) {
-    return { demo: true, message: 'SMTP не настроен, письмо записано в demo-режиме' };
+    return { demo: true, to: email, message: 'SMTP не настроен, письмо записано в demo-режиме' };
   }
   const mailTemplate = buildReportMail({
     locale,
@@ -285,14 +289,14 @@ async function sendEmailWithAttachment(
     },
   });
   await transporter.sendMail({
-    from: process.env.MAIL_FROM || 'noreply@vsvh.local',
+    from: process.env.MAIL_FROM || process.env.SMTP_USER || 'noreply@vsvh.local',
     to: email,
     subject: mailTemplate.subject,
     text: mailTemplate.text,
     html: mailTemplate.html,
     attachments: [{ filename, content: attachmentBuffer, contentType }],
   });
-  return { sent: true };
+  return { sent: true, to: email };
 }
 
 router.get('/student-progress.pdf', requireAuth, async (req, res, next) => {
