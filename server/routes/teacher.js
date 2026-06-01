@@ -34,22 +34,31 @@ function validationError(message, parsed) {
   };
 }
 
+function parseTimestamp(value) {
+  if (value == null || value === '') {
+    return null;
+  }
+  const ts = new Date(value).getTime();
+  return Number.isFinite(ts) ? ts : null;
+}
+
 function toStudentRow(enrollment, lastActivity) {
   if (!enrollment.user) {
     return null;
   }
   const now = Date.now();
-  const createdTs = new Date(enrollment.createdAt).getTime();
-  const activityTs = lastActivity ? new Date(lastActivity).getTime() : Number.NaN;
-  const lastTs = Number.isFinite(activityTs) ? activityTs : createdTs;
+  const enrolledAtRaw = enrollment.createdAt ?? enrollment.get?.('created_at');
+  const enrolledTs = parseTimestamp(enrolledAtRaw);
+  const activityTs = parseTimestamp(lastActivity);
+  const lastTs = activityTs ?? enrolledTs ?? now;
   const active = now - lastTs <= 14 * 24 * 60 * 60 * 1000;
   return {
     userId: enrollment.user.id,
     name: enrollment.user.name,
     email: enrollment.user.email,
     progress: enrollment.progress,
-    enrolledAt: enrollment.createdAt,
-    lastActivity: new Date(lastTs).toISOString(),
+    enrolledAt: safeIsoDate(enrolledAtRaw, new Date(now).toISOString()),
+    lastActivity: safeIsoDate(lastTs, new Date(now).toISOString()),
     active,
   };
 }
