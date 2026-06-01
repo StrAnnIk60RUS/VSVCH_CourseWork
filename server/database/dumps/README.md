@@ -1,6 +1,6 @@
 # SQL-дамп базы данных VSVH
 
-Файл **`vsvh_languages.sql`** — полный дамп PostgreSQL (схема `public` и демонстрационные данные). Предназначен для развёртывания по [разделу 4 ПЗ](../../../docs/4-rukovodstvo-sistemnogo-programmista.md).
+Файл **`vsvh_languages.sql`** — полный дамп PostgreSQL (схема `public` и демонстрационные данные). Инструкция по импорту и запуску — в [README.md](../../../README.md) в корне репозитория.
 
 ## Импорт (pgAdmin 4)
 
@@ -35,4 +35,4 @@ $env:PGPASSWORD = "ваш_пароль"
 
 Рекомендуется удалить из файла строки `\restrict` / `\unrestrict` (pg_dump 17+) и посторонние схемы, если они появились в локальной БД.
 
-Тестовые логины после импорта: [docs/testovye-akkaunty.md](../../../docs/testovye-akkaunty.md).
+Тестовые логины после импорта — в разделе «Тестовые учётные записи» в [README.md](../../../README.md).
