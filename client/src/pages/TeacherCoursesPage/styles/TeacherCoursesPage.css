@@ -1,3 +1,7 @@
 .teacher-courses-page {
   display: contents;
 }
+
+.teacher-course-item {
+  overflow: hidden;
+}

@@ -63,12 +63,12 @@ export function TeacherCoursesPageContent() {
           {items.map((item) => (
             <li
               key={item.id}
-              className="ui-card-interactive rounded border border-ui-border bg-ui-surface p-3"
+              className="teacher-course-item ui-card-interactive rounded border border-ui-border bg-ui-surface p-3"
             >
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="font-medium text-ui-text">{item.title}</p>
-                  <p className="text-sm text-ui-muted">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="break-words font-medium text-ui-text">{item.title}</p>
+                  <p className="break-words text-sm text-ui-muted">
                     {formatCourseLanguage(item.language)} • {item.level} • {t.teacherCourses.lessons}{' '}
                     {item.lessonCount} • {t.teacherCourses.students} {item.enrollmentCount} •{' '}
                     {t.teacherCourses.rating}{' '}
@@ -79,7 +79,7 @@ export function TeacherCoursesPageContent() {
                     {t.teacherCourses.reviews} {item.reviewCount}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap gap-2">
                   {item.published ? (
                     <Link to={`/courses/${item.id}/reviews`} className="ui-btn-secondary text-sm">
                       {t.teacherCourses.openReviews}
