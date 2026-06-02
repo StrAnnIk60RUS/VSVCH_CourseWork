@@ -1,3 +1,7 @@
 .favorites-page {
   display: contents;
 }
+
+.favorite-item {
+  overflow: hidden;
+}

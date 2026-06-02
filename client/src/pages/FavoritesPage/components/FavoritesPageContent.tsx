@@ -24,16 +24,16 @@ export function FavoritesPageContent() {
           {items.map((item) => (
             <li
               key={item.courseId}
-              className="ui-card-interactive rounded border border-ui-border bg-ui-surface p-3"
+              className="favorite-item ui-card-interactive rounded border border-ui-border bg-ui-surface p-3"
             >
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="font-medium">{item.course.title}</p>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="break-words font-medium">{item.course.title}</p>
                   <p className="text-sm text-ui-muted">
                     {formatCourseLanguage(item.course.language)} • {item.course.level}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Link to={`/courses/${item.courseId}`} className="ui-btn-secondary text-sm">
                     {t.favorites.open}
                   </Link>
