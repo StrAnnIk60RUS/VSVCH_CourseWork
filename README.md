@@ -1,5 +1,7 @@
 # VSVH Languages
 
+ссылка на пояснительную записку: https://docs.google.com/document/d/1OioQQ0JvPrhan4znAdfslUwbDxNvOjOk8rN_5JFT_0U/edit?usp=sharing
+
 Веб-платформа для изучения иностранных языков (роли: **студент**, **преподаватель**, гость).  
 Клиент: React + TypeScript + Webpack. Сервер: Node.js + Express + PostgreSQL (Sequelize).
 
