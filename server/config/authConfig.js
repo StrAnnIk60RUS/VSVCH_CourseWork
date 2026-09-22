@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Воронов Вячеслав Игоревич
+// SPDX-License-Identifier: MIT
+
 /**
  * @returns {string}
  */
