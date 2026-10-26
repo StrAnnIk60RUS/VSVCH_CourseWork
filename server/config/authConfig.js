@@ -1,5 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Воронов Вячеслав Игоревич
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: LicenseRef-VSVH-Freeware-EULA
+// Proprietary Freeware (Free for Personal & Educational Use). See LICENSE.
+// Modification, decompilation and commercial use are prohibited.
 
 /**
  * @returns {string}
